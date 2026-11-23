@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Skills, local/, ASCII .ps1, shell syntax, Markdown links
         run: bash tools/check.sh
       - name: ShellCheck
@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: bash install/test-install.sh
 
   test-ps1:
@@ -43,7 +43,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: PSScriptAnalyzer (errors only)
         shell: pwsh
         run: |
