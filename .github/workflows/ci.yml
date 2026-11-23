@@ -1,0 +1,55 @@
+name: CI
+
+# Runs on every pull request and every push to main. Free on a public repo.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Repo checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Skills, local/, ASCII .ps1, shell syntax, Markdown links
+        run: bash tools/check.sh
+      - name: ShellCheck
+        run: shellcheck --severity=warning install/install.sh install/test-install.sh tools/check.sh
+
+  test-sh:
+    name: install.sh (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]  # macOS runs the system bash 3.2
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - run: bash install/test-install.sh
+
+  test-ps1:
+    name: install.ps1 (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: PSScriptAnalyzer (errors only)
+        shell: pwsh
+        run: |
+          $r = Invoke-ScriptAnalyzer -Path install -Recurse -Severity Error
+          $r | Format-Table -AutoSize
+          if ($r) { exit 1 }
+      - name: Tests (Windows PowerShell 5.1)
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File install\test-install.ps1
