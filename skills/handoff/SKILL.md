@@ -9,7 +9,7 @@ Threads carry no memory between each other. Files do. `docs/STATE.md` is the bri
 
 ## save
 1. Rewrite `docs/STATE.md` from scratch using the template below. Max 60 lines. Facts only.
-2. If decisions were made this session, append them to `docs/DECISIONS.md` with who made them.
+2. If decisions were made this session, append them to `docs/DECISIONS.md` with who made them. Then fix entries the work has made stale (an Open point now decided, a "later" item now done). STATE and DECISIONS must not contradict each other.
 3. If `docs/PLAN.md` exists, tick finished tasks.
 4. Commit the docs if the rest of the work is verified (GLOBAL §8): stage only the doc files you changed, by name (never `git add -A` or `.`). Otherwise leave them uncommitted and say so.
 5. Reply: one line "Saved." plus the "Next" items.
@@ -17,7 +17,7 @@ Threads carry no memory between each other. Files do. `docs/STATE.md` is the bri
 ## boot
 1. If "Global rules (Agent-kit)" is not in your context, read `~/Desktop/Agent-kit/rules/GLOBAL.md`, `~/Desktop/Agent-kit/local/MODELS.md` and `~/Desktop/Agent-kit/local/PREFS.md` first and follow them. (Antigravity inside T3 Code loads no rule files on its own.) If the `local/` files are missing, say the kit is not set up and offer the `setup` skill.
 2. Read, in order: `AGENTS.md`, `docs/STATE.md`, headings of `docs/DECISIONS.md`, open tasks in `docs/PLAN.md`. Nothing else yet.
-3. Run `git status` and `git log --oneline -5` to check STATE matches reality. Flag any mismatch. A docs-only save commit on top of the "Last commit" in STATE is expected, not a mismatch.
+3. Run `git status` and `git log --oneline -5` to check STATE matches reality. Flag any mismatch, including DECISIONS entries that contradict STATE. A docs-only save commit on top of the "Last commit" in STATE is expected, not a mismatch.
 4. Reply in 5 lines max: where we are, what is next, any blocker, then ask what to do.
 5. Do not read old threads unless the user gives a link and the files miss something.
 

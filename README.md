@@ -143,6 +143,8 @@ flowchart LR
 
 Headless runs (`claude -p`, scripts) have no T3 tools, so they fall back to native subagents or do the work in one thread.
 
+Delegation is for big work. On a build a strong lead finishes in under about 15 minutes, the lead keeps everything itself, by design. In our own tests so far the kit's measured gains came from git hygiene, recorded decisions and docs, not from delegation.
+
 <details>
 <summary><b>Where the installer writes</b></summary>
 

@@ -8,6 +8,10 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 - GLOBAL §6: a change to user-visible behavior updates the README or docs in the same change, or says why not.
 
 ### Changed
+- GLOBAL §9: an undecided point the user hands over ("pick a sensible option") is Decided on delegation: build the simplest reversible version and list it for the user to confirm. Open is only for points the user still holds.
+- GLOBAL §3: small tasks skip the size question, spec, plan and STATE/DECISIONS files.
+- `handoff`: `save` fixes stale DECISIONS entries; `boot` flags DECISIONS that contradict STATE.
+- README: delegation is for big work; small builds stay with the lead.
 - `audit` skill, `MODELS.example.md` and `setup`: a one-vendor setup may use a same-vendor auditor in a fresh context, and the audit report must say it shares the builder's blind spots.
 
 ## [0.5.0] - 2026-11-24
