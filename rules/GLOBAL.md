@@ -39,6 +39,7 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 
 ## 6. Proof before done
 - Paste the real command output (tests, build, lint) that shows it works. A claim without output does not count.
+- When a change adds or changes behavior a user or caller sees (commands, API, config, output), update the README or docs in the same change, or say why not.
 - Report remaining limits honestly.
 - Redact secrets (tokens, keys, passwords, `.env` values, private URLs) in pasted output, docs, commits and worker or auditor briefs. Keep the rest verbatim.
 

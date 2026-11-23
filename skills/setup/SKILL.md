@@ -31,7 +31,7 @@ Show one short list, or say "no clashes" in one line.
 1. **Tools.** Which do you use: Claude Code, Antigravity, Codex, Gemini CLI? Inside T3 Code or on their own? This sets the installer's harness list.
 2. **Models and accounts.** Which providers and plans do you have? Is there a second account for workers? Ask for labels only, never tokens.
 3. **Routing.** Pick a preset from `rules/MODELS.example.md`:
-   - A: one vendor;
+   - A: one vendor (pick this when the user wants one vendor only; the auditor, if any, is a same-vendor model in a fresh context);
    - B: one vendor plus an outside auditor (recommended when they can run a model from a second vendor, for example Gemini through Antigravity or GPT through Codex; a second account with the same vendor does not count);
    - C: mixed vendors.
 

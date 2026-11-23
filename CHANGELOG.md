@@ -3,6 +3,12 @@
 All notable changes to this kit. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- README: "How delegation works" explains how the lead, `local/MODELS.md` and the harness (`delegate_task` in T3 Code, native subagents elsewhere) fit together.
+- GLOBAL §6: a change to user-visible behavior updates the README or docs in the same change, or says why not.
+
+### Changed
+- `audit` skill, `MODELS.example.md` and `setup`: a one-vendor setup may use a same-vendor auditor in a fresh context, and the audit report must say it shares the builder's blind spots.
 
 ## [0.5.0] - 2026-11-24
 ### Added

@@ -11,7 +11,7 @@ The `setup` skill copies one of the presets below into `local/MODELS.md` and fil
 | Implementation | Code, tests and scripts for well-defined parts of a big build. |
 | Bulk | Test suites, lint, mass edits, reading many files, summaries. |
 | Researcher | Stack research, docs lookups, comparisons. |
-| Auditor (optional) | Reviews specs, plans and diffs. Reports only, never fixes. From a different vendor than the builder. |
+| Auditor (optional) | Reviews specs, plans and diffs. Reports only, never fixes. Ideally from a different vendor than the builder; a same-vendor auditor runs in a fresh context and says it shares the builder's blind spots. |
 | Fallback | Where workers run when their account is near its limit. |
 
 ## Lead effort
@@ -31,7 +31,7 @@ Everything on one provider. Simplest and fastest; no outside review.
 | Implementation | Claude Sonnet 5.5 |
 | Bulk | Claude Haiku 5.5 |
 | Researcher | Claude Sonnet 5.5 |
-| Auditor | none (or the advisor model in a fresh context; same vendor, so shared blind spots) |
+| Auditor | none, or a strong model from the same vendor (for example Claude Fable 5.2) in a fresh context; same vendor, so shared blind spots |
 
 ### B. One vendor plus an outside auditor (recommended)
 Preset A, plus an auditor from another vendor (for example Gemini 4 Neon or a GPT model through Codex). Run it async and only for high-stakes work, so a slow start never blocks you. If it hangs past its time budget (default 20 min), fall back to the advisor model and say so.
