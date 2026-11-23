@@ -1,0 +1,23 @@
+name: Idea or improvement
+description: A new skill, a rule change, support for another harness, or a better flow.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What goes wrong or takes too long today? A real example helps most.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: What should the kit do instead? Where would it live (rule, skill, installer)?
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost
+      description: Rules load into every prompt. If this adds to rules/GLOBAL.md, why does every project need it?

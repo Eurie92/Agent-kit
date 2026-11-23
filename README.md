@@ -1,135 +1,224 @@
+<div align="center">
+
 # Agent-kit
 
-One set of rules and skills for AI coding agents, shared by Claude Code, Antigravity (Gemini) and Codex. It covers the whole flow, from a new idea to a published release, without heavy process on small jobs.
+**One set of rules and skills for your AI coding agents.**
+Claude Code, Antigravity (Gemini) and Codex all follow the same workflow, from a new idea to a published release.
 
-- Small bug or tweak: the agent just does it, with a failing test or a screenshot as proof.
-- Real feature: pick a scope size, write a short spec, plan, build, prove.
-- New project: full kickoff with stack research, then a spec and a plan.
-- Release: a checklist gate and an outside audit, and nothing goes public without your "yes".
-- Threads stay cheap: say `save` at the end of a session and `boot` at the start of the next one. Files carry the memory, not chat history.
+[![CI](https://github.com/Eurie92/Agent-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/Eurie92/Agent-kit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Eurie92/Agent-kit?sort=semver)](https://github.com/Eurie92/Agent-kit/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Windows | macOS | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
-## Quick start (tutorial)
+[Install](#install) · [Daily use](#daily-use) · [How it works](#how-it-works) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
-Requirements: git, plus one of:
-- Windows with PowerShell 5.1 or later (`install/install.ps1`). No admin rights or Developer Mode needed.
-- macOS or Linux with bash (`install/install.sh`). The bash 3.2 that ships with macOS works.
+</div>
 
-**Easiest: let your agent do it.** In Claude Code, Antigravity or Codex, say:
+---
+
+## Why
+
+Every agent tool has its own rule files, and every thread starts from zero. Agent-kit gives all of them **one shared playbook**:
+
+| | |
+|---|---|
+| ⚡ **No ceremony on small jobs** | A bug or tweak gets done right away, with a failing test or a screenshot as proof. |
+| 📐 **Process only when it pays** | Real features get a scope pick, a short spec, a plan, then proof. |
+| 🧠 **Memory in files, not chat** | Say `save` at the end, `boot` in the next thread. Threads stay short and cheap. |
+| 🔍 **Outside review** | High-stakes work gets audited by a model from another vendor before it ships. |
+| ✋ **You stay in control** | Nothing merges to main, deploys or publishes without your "yes". |
+| 🧩 **Yours, not ours** | Your models, accounts and chat style live in git-ignored `local/` files. |
+
+## Install
+
+You need **git**, plus Windows PowerShell 5.1+ (Windows) or bash (macOS, Linux; the macOS default bash 3.2 works). No admin rights.
+
+### Option 1: let your agent do it (recommended)
+
+Open Claude Code, Antigravity or Codex and say:
 
 > Install Agent-kit from https://github.com/Eurie92/Agent-kit. Follow its INSTALL.md.
 
-The agent clones the kit to `~/Desktop/Agent-kit` and runs the `setup` skill:
-- It reads your existing global rules and skills and reports any clashes.
-- It asks one question at a time: tools, models and accounts, routing, auditor, chat style, lead effort, and your own always/never rules.
-- It writes your answers to `local/MODELS.md` and `local/PREFS.md`. Git ignores `local/`, so your choices stay on your machine.
-- It runs the installer (a dry run first) and checks the result.
+The agent clones the kit to `~/Desktop/Agent-kit` and runs the **`setup`** interview:
 
-To change your choices later, say `setup`.
+1. Reads your existing global rules and skills, and reports any clashes.
+2. Asks one question at a time: tools, models and accounts, routing, auditor, chat style, effort, your own always/never rules.
+3. Writes your answers to `local/MODELS.md` and `local/PREFS.md`.
+4. Runs the installer as a dry run, shows you the result, then installs and checks it.
 
-**By hand.** On Windows (PowerShell):
+Change your answers any time: say `setup`.
+
+### Option 2: by hand
+
+<details>
+<summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
 git clone https://github.com/Eurie92/Agent-kit "$HOME\Desktop\Agent-kit"
 cd "$HOME\Desktop\Agent-kit"
 mkdir local
-copy rules\MODELS.example.md local\MODELS.md   # then edit it: pick a preset, set your models
+copy rules\MODELS.example.md local\MODELS.md   # edit: pick a preset, set your models
 notepad local\PREFS.md                          # chat style and personal rules (format in skills/setup/SKILL.md)
-powershell -ExecutionPolicy Bypass -File install\install.ps1 -DryRun   # see what changes
-powershell -ExecutionPolicy Bypass -File install\install.ps1           # do it
+powershell -ExecutionPolicy Bypass -File install\install.ps1 -DryRun   # preview
+powershell -ExecutionPolicy Bypass -File install\install.ps1           # install
 ```
+</details>
 
-On macOS or Linux:
+<details>
+<summary><b>macOS / Linux (bash)</b></summary>
 
 ```bash
 git clone https://github.com/Eurie92/Agent-kit ~/Desktop/Agent-kit
 cd ~/Desktop/Agent-kit
 mkdir -p local
-cp rules/MODELS.example.md local/MODELS.md   # then edit it: pick a preset, set your models
+cp rules/MODELS.example.md local/MODELS.md   # edit: pick a preset, set your models
 nano local/PREFS.md                          # chat style and personal rules (format in skills/setup/SKILL.md)
-bash install/install.sh --dry-run            # see what changes
-bash install/install.sh                      # do it
+bash install/install.sh --dry-run            # preview
+bash install/install.sh                      # install
 ```
+</details>
 
-Both installers take the same options: `-DryRun` / `--dry-run`, `-Harness claude,gemini` / `--harness claude,gemini`, and `-Uninstall` / `--uninstall`. The how-to table below uses the Windows names.
-
-The installer stops, without changing anything, if `local/MODELS.md` or `local/PREFS.md` is missing. Keep the kit at `~/Desktop/Agent-kit`, because the rules and skills point there.
-
-Then open a new agent thread in any project and say `boot`. The agent reads `AGENTS.md` and `docs/STATE.md`. If they are missing, it offers to create them from `templates/project/`. If the project has its own `CLAUDE.md`, it should contain the line `@AGENTS.md` so Claude Code loads the project rules (`kickoff` adds it).
-
-## How-to
-
-| I want to... | Say or do |
-|---|---|
-| Start a new project | New thread on your strongest model at high effort, then type `/kickoff` (Claude Code) or say `kickoff` |
-| Continue work | New thread, say `boot` |
-| End a session | Say `save` (also when a thread has auto-compacted twice) |
-| Build a feature | Describe it. Non-trivial work triggers the `feature` flow |
-| Fix a bug | Describe it. The agent writes a failing test, fixes it, then shows the test passing |
-| Release | Say `ship` |
-| Get an outside review | Say `audit` |
-| Add a project type | Say so. The agent researches it and writes a new playbook |
-| Change models, auditor or chat style | Say `setup` (or edit `local/MODELS.md` / `local/PREFS.md`, then re-run the installer) |
-| Update after editing the kit | Re-run the installer (Gemini and Codex get a copy of the rules, and Gemini gets copies of the skills; Claude rules and Claude/Codex skills are live links) |
-| Remove it | `install.ps1 -Uninstall` (removes only what it added; backups are in `~/.agent-kit-backups/`) |
-| Install for one harness | `install.ps1 -Harness claude` (or `gemini`, `codex`) |
-| Test the macOS/Linux installer | `bash install/test-install.sh` (fake homes in a temp folder). On GitHub: Actions → "install.sh tests" → Run workflow (Linux and macOS; manual only, since macOS minutes cost ten times as much on a private repo) |
-
-## Reference
-
-```
-INSTALL.md     instructions for an agent installing the kit
-rules/
-  GLOBAL.md           always-on rules for every project and harness
-  MODELS.example.md   model layers and routing presets to copy from
-local/         your own settings, git-ignored (written by `setup`)
-  MODELS.md    your model routing and accounts
-  PREFS.md     your chat style and always/never rules
-skills/        loaded only when needed
-  setup/       interview → local/ files → install → verify
-  kickoff/     idea → research → spec → plan → scaffold (manual only: /kickoff)
-  feature/     scope size → spec section → plan → build → proof
-  handoff/     save / boot through docs/STATE.md
-  ship/        pre-publish gate
-  audit/       outside review by a model from another vendor
-  playbooks/   per project type: web, bot, extension, app, and more as needed
-  standards/   proven standards per field, cited in specs
-templates/project/
-  AGENTS.md    project rules (150 lines max)
-  docs/        STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH
-install/
-  install.ps1        installer for Windows
-  install.sh         installer for macOS and Linux (same behavior)
-  test-install.sh    tests for install.sh
-docs/          this kit's own decisions and lessons
-```
-
-Where the installer wires things:
-
-| Harness | Rules | Skills |
+| Option | Windows | macOS / Linux |
 |---|---|---|
-| Claude Code | `@` imports of `rules/GLOBAL.md`, `local/MODELS.md` and `local/PREFS.md` in `~/.claude/CLAUDE.md` | links in `~/.claude/skills/` |
-| Antigravity | copy of those three files in `~/.gemini/GEMINI.md` | copies in `~/.gemini/config/skills/` (Antigravity does not follow junctions there) |
-| Codex | copy of those three files in `~/.codex/AGENTS.md` (32 KiB cap) | links in `~/.agents/skills/` |
+| Preview only | `-DryRun` | `--dry-run` |
+| Some tools only | `-Harness claude,gemini` | `--harness claude,gemini` |
+| Remove everything it added | `-Uninstall` | `--uninstall` |
 
-Links are directory junctions on Windows and symlinks on macOS and Linux. Antigravity gets copies on every system, to match Windows.
+> [!NOTE]
+> Keep the kit at `~/Desktop/Agent-kit`; the rules and skills point there. The installer stops without changing anything if `local/MODELS.md` or `local/PREFS.md` is missing, and backs up every file it touches to `~/.agent-kit-backups/`.
 
-The installer writes only between `agent-kit:start` and `agent-kit:end` markers and updates that block in place. Your own lines in those files are kept. If the markers are broken (duplicate or unpaired), it skips the file with a warning. If a skill folder with the same name already exists and is not the kit's, it is skipped with a warning. Skills removed from the kit are unlinked or removed on the next run. Antigravity's skill copies are rebuilt from the kit, so files added inside them are lost (a backup is taken first); edit the kit, not the copies.
+## Daily use
 
-T3 Code runs Antigravity with a private Gemini home and links in only the skills folder. There it loads skills but no rule files: not the global ones (tested: `GEMINI.md` in the home root, `config/GEMINI.md`, `config/rules/`) and not the project's `AGENTS.md` or `.agents/rules/`. So the `handoff` skill's `boot` step, and each project's `AGENTS.md` from `templates/project/`, tell the agent to read the kit rules itself when they are missing. In T3, start every Antigravity thread with `boot`.
+Open a new thread in any project and talk normally. These words steer the flow:
 
-## Explanation
+| You say | What happens |
+|---|---|
+| `boot` | The agent reads the project's `AGENTS.md` and `docs/STATE.md` and picks up where you left off. Missing? It offers to create them. |
+| *"fix the login bug"* | Small job: it writes a failing test, fixes it, shows the test passing. |
+| *"add dark mode"* | Real feature: you pick **minimal / balanced / hardened**, approve a short spec, then it plans, builds and proves it. |
+| `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, plan, scaffold. |
+| `audit` | A model from another vendor reviews the spec, plan or diff. It reports; it never edits. |
+| `ship` | Release gate: checklist, secrets scan, audit for high-stakes work, then waits for your "yes". |
+| `save` | Writes progress to `docs/STATE.md` so the next thread can `boot`. Use it at the end of a session. |
+| `setup` | Change your models, auditor, chat style or personal rules. |
 
-**Why layers.** Rules are always loaded, so they stay short. Skills load only when a task needs them. Project facts live in each project's `AGENTS.md`. This keeps every prompt small.
+**A typical session**
 
-**Why size the task first.** Most work is small. Running a spec-and-plan process on a one-line fix wastes time and tokens. The rules make the agent do small things now and save the process for work that needs it.
+```text
+you:    boot
+agent:  Read STATE: last done = checkout page; next = email receipts.
+you:    add email receipts
+agent:  Non-trivial. Pick: minimal (~1 h) / balanced (~3 h, recommended) / hardened (~1 day).
+you:    balanced
+agent:  Spec Part A: ... approve?
+you:    yes
+agent:  ...builds on feat/email-receipts... tests: 14 passed. Pushed.
+you:    save
+```
 
-**Why an outside auditor.** A model is a weak judge of its own work. A model from another vendor reviews specs and diffs before high-stakes releases. It only reports; it never fixes. It is optional: with one vendor only, the advisor model reviews in a fresh context instead (weaker, but better than nothing).
+## How it works
 
-**Why `local/`.** Everyone has different models, accounts and taste. The shared rules stay the same for everyone; your own choices live in git-ignored files, so pulling kit updates never overwrites them and sharing the kit never leaks them.
+```mermaid
+flowchart LR
+  K["Agent-kit repo<br/>rules · skills · templates"] --> I{{"installer"}}
+  L["local/<br/>your models + prefs"] --> I
+  I --> C["Claude Code<br/>~/.claude"]
+  I --> G["Antigravity<br/>~/.gemini"]
+  I --> X["Codex<br/>~/.codex · ~/.agents"]
+  C & G & X --> P["Any project<br/>AGENTS.md + docs/STATE.md"]
+```
 
-**Why files, not long threads.** A thread that auto-compacts loses detail and costs more each turn. `save` writes the state to a 60-line file, and a fresh thread `boot`s from it.
+- **Rules** (`rules/GLOBAL.md` + your `local/` files) load in every thread, so they stay short.
+- **Skills** load only when a task needs them: `setup`, `kickoff`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
+- **Project facts** live in each project's `AGENTS.md` and `docs/` (templates in `templates/project/`).
 
-**Model layers** (presets in `rules/MODELS.example.md`, yours in `local/MODELS.md`): an advisor for rare hard calls, the lead in your thread, implementation and bulk workers for delegated work, a researcher, and an optional outside auditor. The lead does small work itself and delegates only parallel, bulk or research work. The lead runs at extra-high effort for planning and hard bugs, and at medium for building.
+**Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
+
+<details>
+<summary><b>Where the installer writes</b></summary>
+
+| Tool | Rules | Skills |
+|---|---|---|
+| Claude Code | `@` imports of `rules/GLOBAL.md`, `local/MODELS.md`, `local/PREFS.md` in `~/.claude/CLAUDE.md` | links in `~/.claude/skills/` |
+| Antigravity | a copy of those three files in `~/.gemini/GEMINI.md` | copies in `~/.gemini/config/skills/` (it does not follow links there) |
+| Codex | a copy of those three files in `~/.codex/AGENTS.md` (32 KiB cap) | links in `~/.agents/skills/` |
+
+- Links are directory junctions on Windows and symlinks on macOS and Linux.
+- The installer writes only between `agent-kit:start` and `agent-kit:end` markers and updates that block in place. Your own lines stay.
+- Broken markers, or a skill folder with the same name that is not the kit's: skipped with a warning.
+- Skills removed from the kit are unlinked on the next run.
+- Antigravity's skill copies are rebuilt from the kit (after a backup). Edit the kit, not the copies.
+- After editing the kit, re-run the installer: Gemini and Codex hold copies.
+</details>
+
+<details>
+<summary><b>Using Antigravity inside T3 Code</b></summary>
+
+T3 Code runs Antigravity with a private Gemini home and links in only the skills folder. There it loads skills but no rule files: not the global ones (tested: `GEMINI.md` in the home root, `config/GEMINI.md`, `config/rules/`) and not the project's `AGENTS.md` or `.agents/rules/`. So the `handoff` skill's `boot` step and each project's `AGENTS.md` tell the agent to read the kit rules itself when they are missing. **In T3, start every Antigravity thread with `boot`.**
+</details>
+
+<details>
+<summary><b>Repo layout</b></summary>
+
+```text
+INSTALL.md              instructions for an agent installing the kit
+rules/
+  GLOBAL.md             always-on rules for every project and tool
+  MODELS.example.md     model layers and routing presets
+local/                  your settings, git-ignored (written by setup)
+skills/
+  setup/                interview → local/ → install → verify
+  kickoff/              idea → research → spec → plan → scaffold
+  feature/              scope pick → spec → plan → build → proof
+  handoff/              save / boot through docs/STATE.md
+  ship/                 pre-publish gate
+  audit/                outside review by another vendor's model
+  playbooks/            per project type: web, bot, extension, app, ...
+  standards/            proven standards per field, cited in specs
+templates/project/      AGENTS.md + docs (STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH)
+install/                install.ps1, install.sh and their tests
+tools/check.sh          repo checks (also run by CI)
+docs/                   this kit's own spec, plan, decisions and lessons
+```
+</details>
+
+## FAQ
+
+<details>
+<summary><b>Do I need all three tools?</b></summary>
+
+No. Install for the ones you use: `--harness claude` (or `-Harness claude` on Windows). `setup` asks and does this for you.
+</details>
+
+<details>
+<summary><b>Will it overwrite my own CLAUDE.md / GEMINI.md / AGENTS.md?</b></summary>
+
+No. It only manages the block between its markers, keeps everything else byte for byte (line endings too), and backs up the file first. `--uninstall` removes only what it added.
+</details>
+
+<details>
+<summary><b>I only have one AI vendor. Does the audit still work?</b></summary>
+
+Yes. With no outside auditor, `audit` has the advisor model review in a fresh context. It is weaker than a second vendor, but better than self-review.
+</details>
+
+<details>
+<summary><b>How do I update?</b></summary>
+
+`git pull` in the kit folder, then re-run the installer. Your `local/` files are never touched by updates.
+</details>
+
+## Why it is built this way
+
+- **Short rules, lazy skills.** Rules load into every prompt, so they stay small. Skills load only when needed.
+- **Size the task first.** Most work is small. A spec for a one-line fix wastes time and tokens.
+- **Another vendor reviews.** A model is a weak judge of its own work.
+- **Files beat long threads.** A thread that auto-compacts loses detail and costs more each turn. `save` writes a 60-line state file; a fresh thread `boot`s from it.
+- **`local/` for taste.** Shared rules stay the same for everyone. Your choices stay on your machine, so updates never overwrite them and sharing never leaks them.
+
+## Contributing
+
+New playbooks, standards sheets, installer fixes and clearer rules are all welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md). CI runs the repo checks and both installers' tests on Windows, macOS and Linux for every pull request.
 
 ## Credits
 
@@ -139,4 +228,4 @@ Where this kit differs: a `setup` interview writes each user's own models and ch
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE)

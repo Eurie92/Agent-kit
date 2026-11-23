@@ -1,0 +1,33 @@
+name: New playbook or standards sheet
+description: Propose a project type (playbook) or a field of standards for the library.
+labels: [library]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Playbook (project type)
+        - Standards sheet (field)
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      placeholder: cli-tool, game, data-pipeline, accessibility, payments...
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: What it should cover
+      description: Stack options, test tools, security basics, before-publish checks, or the standards to cite. Link official sources.
+    validations:
+      required: true
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: Help
+      options:
+        - label: I can open a pull request for this

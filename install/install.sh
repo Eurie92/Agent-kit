@@ -382,9 +382,9 @@ set_skill_copies() {
 say "Agent-kit: $KIT"
 for h in $HARNESS; do
   case $h in
-    claude) rules="$HOME_DIR/.claude/CLAUDE.md"; skills="$HOME_DIR/.claude/skills"; mode=link ;;
-    gemini) rules="$HOME_DIR/.gemini/GEMINI.md"; skills="$HOME_DIR/.gemini/config/skills"; mode=copy ;;
-    codex) rules="$HOME_DIR/.codex/AGENTS.md"; skills="$HOME_DIR/.agents/skills"; mode=link ;;
+    claude) rules="$HOME_DIR/.claude/CLAUDE.md"; skills="$HOME_DIR/.claude/skills"; mode="link" ;;
+    gemini) rules="$HOME_DIR/.gemini/GEMINI.md"; skills="$HOME_DIR/.gemini/config/skills"; mode="copy" ;;
+    codex) rules="$HOME_DIR/.codex/AGENTS.md"; skills="$HOME_DIR/.agents/skills"; mode="link" ;;
   esac
   say ""
   say "== $h =="

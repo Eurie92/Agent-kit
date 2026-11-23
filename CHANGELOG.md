@@ -4,6 +4,18 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-24
+### Added
+- Contributor setup: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` (private vulnerability reports), a pull request template, issue forms (bug, idea, new playbook or standards sheet), `CODEOWNERS` and Dependabot for GitHub Actions.
+- CI (`.github/workflows/ci.yml`) on every pull request and push to main: repo checks and ShellCheck on Linux, `install.sh` tests on Linux and macOS, PSScriptAnalyzer and `install.ps1` tests on Windows.
+- `install/test-install.ps1`: tests for `install.ps1` against fake homes (31 checks).
+- `tools/check.sh`: skill front matter, no tracked `local/` files, ASCII-only `.ps1`, shell syntax and relative Markdown links.
+- Release workflow: pushing a `vX.Y.Z` tag publishes a GitHub release with that version's CHANGELOG section.
+
+### Changed
+- README rewritten: badges, why, install options, daily-use commands with a sample session, a diagram of how it works, and a FAQ.
+- The manual-only `install-sh.yml` workflow is replaced by CI (Actions minutes are free on a public repo).
+
 ## [0.4.0] - 2026-11-24
 ### Added
 - `install/install.sh`: installer for macOS and Linux, with the same options, behavior and output as `install.ps1`. Skills are symlinks instead of junctions; Antigravity still gets copies. It runs on bash 3.2 (the macOS default) and later, with POSIX tools only.

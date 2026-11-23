@@ -1,0 +1,38 @@
+name: Bug report
+description: The installer, a rule or a skill did something wrong.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - install.ps1 (Windows)
+        - install.sh (macOS / Linux)
+        - A rule (rules/GLOBAL.md)
+        - A skill
+        - Docs
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, shell version, harness (Claude Code, Antigravity, Codex, T3 Code...), kit version or commit.
+      placeholder: macOS 15, bash 3.2, Claude Code, v0.4.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps, the command you ran, and the output. Remove tokens, emails and private paths first.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
