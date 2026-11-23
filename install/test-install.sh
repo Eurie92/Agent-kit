@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Variables such as CODE are read inside the check strings, which run through eval.
+# shellcheck disable=SC2034
 # Tests for install.sh. Each case runs the installer against a copy of the kit and a fake home in a
 # temp folder, so the real home and the real kit are never touched.
 #
