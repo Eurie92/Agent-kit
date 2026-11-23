@@ -3,6 +3,8 @@
 All notable changes to this kit. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- `docs/BENCHMARK.md`: A/B benchmark of the kit vs no kit (3 tasks, 12 headless runs, hidden tests, two blind judges).
 
 ## [0.5.0] - 2026-11-24
 ### Added
