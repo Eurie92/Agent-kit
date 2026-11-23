@@ -17,7 +17,7 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 - On "boot": follow the `handoff` skill. On "save": follow the `handoff` skill.
 
 ## 3. Size the task
-- Small (a question, a bug, config, about 3 files or fewer): do it now. No ceremony.
+- Small (a question, a bug, config, about 3 files or fewer): do it now. No ceremony: no size question, spec, plan, or STATE/DECISIONS files; branch, fix, prove, commit, report.
 - Non-trivial: once you understand the request, and before any spec or plan, ask the user to pick minimal, balanced or hardened. Give scope and time for each and recommend one. Wait for the pick.
 - New project: the `kickoff` skill. It is manual on purpose, so ask the user to run `/kickoff` (Claude Code) or say "kickoff". Non-trivial feature: use the `feature` skill.
 - Never turn a scaffold, setup or small change into production infrastructure unless the user picked hardened.
@@ -39,6 +39,7 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 
 ## 6. Proof before done
 - Paste the real command output (tests, build, lint) that shows it works. A claim without output does not count.
+- When a change adds or changes behavior a user or caller sees (commands, API, config, output), update the README or docs in the same change, or say why not.
 - Report remaining limits honestly.
 - Redact secrets (tokens, keys, passwords, `.env` values, private URLs) in pasted output, docs, commits and worker or auditor briefs. Keep the rest verbatim.
 
@@ -53,6 +54,7 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 
 ## 9. Decisions
 - Record decisions in `docs/DECISIONS.md` as one of: Locked by user (never change; if you think it is wrong, say so and wait), Decided on delegation (working answer; propose changes with a reason, never silently), Open (do not invent an answer; give options, cost, recommendation).
+- When the user hands an undecided point to you ("pick a sensible option", "your call"), it is Decided on delegation, not Open: build the simplest reversible version, record what you picked and where to change it, and list it for the user to confirm. Open is only for points the user still holds.
 
 ## 10. Lessons
 - Fix the work first.

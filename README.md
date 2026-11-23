@@ -134,6 +134,17 @@ flowchart LR
 
 **Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
 
+**How delegation works.** There is no separate orchestrator program. Delegation is rules plus your harness:
+
+1. `rules/GLOBAL.md` §4 tells the lead when to delegate: independent parts that can run in parallel, research beyond a couple of searches, full test or lint runs, reading more than about 5 files, and audits at gates. Small work stays with the lead.
+2. `local/MODELS.md` says which model does each layer and on which account.
+3. The harness runs the worker. In T3 Code the lead calls `delegate_task` (for example with `providerInstanceId: "claudeTeam2"` for a second Claude account); in Claude Code alone it uses native subagents. Each worker gets a written brief and returns pass or fail, errors and files touched.
+4. The lead reviews every worker result before using it.
+
+Headless runs (`claude -p`, scripts) have no T3 tools, so they fall back to native subagents or do the work in one thread.
+
+Delegation is for big work. On a build a strong lead finishes in under about 15 minutes, the lead keeps everything itself, by design. In our own tests so far the kit's measured gains came from git hygiene, recorded decisions and docs, not from delegation.
+
 <details>
 <summary><b>Where the installer writes</b></summary>
 

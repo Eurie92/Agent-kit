@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Outside adversarial review of a spec, plan or diff by a model from a different vendor than the builder. Use for high-stakes work (security, auth, payments, user data), before a ship gate, or when the user says "audit".
+description: Outside adversarial review of a spec, plan or diff by a fresh-context model, ideally from a different vendor than the builder. Use for high-stakes work (security, auth, payments, user data), before a ship gate, or when the user says "audit".
 ---
 
 # Audit
@@ -8,7 +8,7 @@ description: Outside adversarial review of a spec, plan or diff by a model from 
 The auditor finds problems. It never fixes or implements. The builder never grades its own work.
 
 ## Pick the auditor
-From the routing file (`local/MODELS.md`): the Auditor layer, from a different vendor than whoever built the work. Start it async and keep working. If no auditor is set, tell the user and offer a fresh-context review by the advisor model (same vendor, so weaker).
+From the routing file (`local/MODELS.md`): the Auditor layer, ideally from a different vendor than whoever built the work. Start it async and keep working. If the routing sets a same-vendor auditor (one-vendor setup), run it in a fresh context and say in the report that it shares the builder's blind spots. If no auditor is set, tell the user and offer a fresh-context review by the advisor model (same vendor, so weaker).
 
 ## Brief (send exactly this shape)
 
