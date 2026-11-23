@@ -1,0 +1,7 @@
+.env*
+*.log
+.DS_Store
+Thumbs.db
+
+# Personal settings written by the setup skill
+local/
