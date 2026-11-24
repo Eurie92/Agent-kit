@@ -4,6 +4,8 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 ### Added
+- `standards`: three new sheets. `ui-visual-design.md` (tokens, type, color, spacing, components, motion with exact durations and easings, and a list of "AI slop" tells to avoid), `web-production.md` (responsive, Core Web Vitals, images, fonts, premium motion with reduced-motion rules, SEO, launch checks) and `product-quality.md` (forms, state, payments, security, support). Conflicts between sources are resolved in the sheets.
+- `kickoff` and `client` design steps follow the UI sheets; `ship` runs the web "Before launch" list for websites.
 - `client` skill: client work from first message to handover in eight gated phases (intake, proposal, kickoff, design, build, UAT, ship, handover), with change requests and rules on prices and client data.
 - `templates/client/`: BRIEF, PROPOSAL, UAT and HANDOVER templates.
 - `kickoff`: a design step (tokens, key screens, screenshots at 375 px and 1280 px, user approval) before the plan.

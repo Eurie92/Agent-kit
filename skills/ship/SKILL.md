@@ -13,7 +13,7 @@ Nothing goes public without passing this gate and an explicit user "yes". Change
 4. **Clean state.** Commit the changes from steps 1-3. `git status` clean, on the right branch, up to date with remote.
 5. **Checks.** Run the project's test, lint, typecheck and build commands. Delegate long runs to Bulk. Paste the summary output.
 6. **Secrets.** Scan the diff since the last release for keys, tokens, `.env` contents and private URLs. On a first release, scan every tracked file (`git ls-files`). Confirm no `.env*` or credential file is tracked and that they are git-ignored. If a built package ships (store bundle, zip, image), check it too.
-7. **Checklist.** Go through every "Before-publish checklist" item of each playbook. Mark each: pass (with proof), fail, or n/a (with reason).
+7. **Checklist.** Go through every "Before-publish checklist" item of each playbook, and for a website or web app the "Before launch" list in the `standards` sheet `web-production.md`. Mark each: pass (with proof), fail, or n/a (with reason).
 8. **Ask.** Show: checks output, checklist result, audit result, release notes, exact publish command. Wait for the user's "yes". Then publish and paste the result (URL, version, store status).
 
 Any fail stops the gate. Report what failed and the fix; do not publish around it. If anything changes after step 4, commit it and run steps 4-7 again.
