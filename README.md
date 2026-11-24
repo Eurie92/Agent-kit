@@ -98,7 +98,7 @@ Open a new thread in any project and talk normally. These words steer the flow:
 | *"fix the login bug"* | Small job: it writes a failing test, fixes it, shows the test passing. |
 | *"add dark mode"* | Real feature: you pick **minimal / balanced / hardened**, approve a short spec, then it plans, builds and proves it. |
 | `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, design, plan, scaffold. |
-| `client` | Work for a paying client: brief, proposal, kickoff, design approval, build with demos, UAT sign-off, ship, handover. |
+| `client` | Work for a paying client: brief, proposal, kickoff, design approval, build with demos, QA check, UAT sign-off, ship, handover. |
 | `audit` | A model from another vendor reviews the spec, plan or diff. It reports; it never edits. |
 | `ship` | Release gate: checklist, secrets scan, audit for high-stakes work, then waits for your "yes". |
 | `save` | Writes progress to `docs/STATE.md` so the next thread can `boot`. Use it at the end of a session. |
@@ -120,12 +120,12 @@ you:    save
 
 ## Client work
 
-Say `client` when someone pays you to build an app or website. The `client` skill runs eight phases, and each one ends at a gate:
+Say `client` when someone pays you to build an app or website. The `client` skill runs nine phases, and each one ends at a gate:
 
 ```mermaid
 flowchart LR
   A["1 Intake<br/>BRIEF"] --> B["2 Proposal<br/>3 packages"] --> C["3 Kickoff<br/>spec + plan"] --> D["4 Design<br/>tokens + screens"]
-  D --> E["5 Build<br/>staging + demos"] --> F["6 UAT<br/>client sign-off"] --> G["7 Ship<br/>live"] --> H["8 Handover<br/>access + training"]
+  D --> E["5 Build<br/>staging + demos"] --> Q["6 QA check<br/>our overall check"] --> F["7 UAT<br/>client sign-off"] --> G["8 Ship<br/>live"] --> H["9 Handover<br/>access + training"]
 ```
 
 | Phase | Who approves | File |
@@ -135,11 +135,13 @@ flowchart LR
 | Kickoff | You approve spec Part A | `docs/SPEC.md`, `docs/PLAN.md` |
 | Design | Client approves the key screens (375 px and 1280 px) | `docs/design/` |
 | Build | You review each weekly demo on staging | feature branches |
+| QA check | Every row passes, then you OK sending it to the client | `docs/client/QA.md` |
 | UAT | Client signs off | `docs/client/UAT.md` |
 | Ship | Your "yes" in `ship` | live URL |
 | Handover | Client gets access, guide and training | `docs/client/HANDOVER.md` |
 
 - **Good-looking by design, not by luck.** Phase 4 builds a design system from the client's logo and brand (color, type, spacing, radius) and the 3-5 key screens with realistic content, before any feature code. It follows three standards sheets: `ui-visual-design.md` (tokens, type, color, motion, what to avoid), `web-production.md` (responsive, speed, SEO, launch checks) and `product-quality.md` (forms, state, security, payments).
+- **Checked before the client sees it.** Phase 6 is our overall check on staging: every acceptance criterion, tests, design match, phones and browsers, speed, accessibility, forms and security, each with proof. Zero open fails before UAT.
 - **You set the prices.** The agent never invents a rate.
 - **Scope stays signed.** New wishes after the proposal become change requests.
 - **No secrets in the repo.** Client logins and member data never go into files; `HANDOVER.md` says where each account is held, not the password.
@@ -221,7 +223,7 @@ local/                  your settings, git-ignored (written by setup)
 skills/
   setup/                interview → local/ → install → verify
   kickoff/              idea → research → spec → design → plan → scaffold
-  client/               brief → proposal → design → UAT → handover
+  client/               brief → proposal → design → QA → UAT → handover
   feature/              scope pick → spec → plan → build → proof
   handoff/              save / boot through docs/STATE.md
   ship/                 pre-publish gate
@@ -229,7 +231,7 @@ skills/
   playbooks/            per project type: web, bot, extension, app, ...
   standards/            proven standards per field, cited in specs
 templates/project/      AGENTS.md + docs (STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH)
-templates/client/       BRIEF, PROPOSAL, UAT, HANDOVER for client work
+templates/client/       BRIEF, PROPOSAL, QA, UAT, HANDOVER for client work
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
 docs/                   this kit's own spec, plan, decisions and lessons

@@ -5,7 +5,7 @@ description: End-to-end flow for building something for a paying client, from fi
 
 # Client delivery
 
-Goal: turn a client request into a delivered, accepted and handed-over product, with written agreement at each gate. The client sees and approves four things: the brief, the proposal, the designs and the UAT result. Everything else is internal.
+Goal: turn a client request into a delivered, accepted and handed-over product, with written agreement at each gate. The client sees and approves four things: the brief, the proposal, the designs and the UAT result. Everything else is internal. The client never sees a build that has not passed our own QA check.
 
 Files live in the client's project folder: client-facing documents in `docs/client/` (templates in `~/Desktop/Agent-kit/templates/client/`), and the usual `AGENTS.md` and `docs/` files from `kickoff`.
 
@@ -18,9 +18,10 @@ Files live in the client's project folder: client-facing documents in `docs/clie
 | 3 | Kickoff | `docs/SPEC.md`, `docs/PLAN.md` | User approves spec Part A |
 | 4 | Design | design tokens + key screens | Client approves the screens |
 | 5 | Build | staging link, weekly demo | User reviews each demo |
-| 6 | UAT | `docs/client/UAT.md` | Client signs off |
-| 7 | Ship | live URL | User's "yes" in `ship` |
-| 8 | Handover | `docs/client/HANDOVER.md` | Client receives access, guide and training |
+| 6 | QA check | `docs/client/QA.md` | Every row passes; user approves sending to the client |
+| 7 | UAT | `docs/client/UAT.md` | Client signs off |
+| 8 | Ship | live URL | User's "yes" in `ship` |
+| 9 | Handover | `docs/client/HANDOVER.md` | Client receives access, guide and training |
 
 Do not start a phase before the previous gate passes. Record each gate (date, who, what) in `docs/DECISIONS.md` as "Locked by user" or "Locked by client".
 
@@ -47,15 +48,24 @@ Run the `kickoff` flow with the brief and the chosen package as input; skip ques
 ## 5. Build
 Use the `feature` flow per feature, in plan order. Deploy every merged feature to a staging URL. Each week, give the user a short demo note: what is new, the staging link, what needs client input. Client requests outside the signed scope become change requests, never silent additions.
 
-## 6. UAT
+## 6. QA check (before the client sees it)
+Our overall check that the product is complete and good enough to show. Run it on staging, on the exact version the client will test.
+1. Fill `docs/client/QA.md` from the template: scope (every acceptance criterion and every proposal item), automated checks, look and feel, devices and browsers, speed and SEO (websites), accessibility, forms, data and security. Each row gets proof: command output, a screenshot or a test name.
+2. Delegate the long parts (full test run, Lighthouse, screenshots of every screen, link check) to Bulk. The lead reviews every result and every screenshot.
+3. Money, logins or personal data: run `audit` on this release candidate now, not only at ship.
+4. Fix every Fail and re-check its row. Ready for UAT means zero open Fails; anything accepted as a known limit is listed for the client.
+5. Show the user the summary (pass and fail counts, known limits, staging link). Only after the user's OK do the staging link and `UAT.md` go to the client.
+
+## 7. UAT
 1. Write `UAT.md`: one row per acceptance criterion in the spec, written as steps the client can follow on staging without help.
 2. The client runs it. Bugs are fixed and re-tested; new wishes are change requests.
 3. Sign-off is the client's name and date on `UAT.md`. Only then go to `ship`.
+4. A fix during UAT that changes more than copy re-runs the affected QA rows before the client re-tests.
 
-## 7. Ship
+## 8. Ship
 Run the `ship` skill. Also confirm: domain and HTTPS work, backups run and one restore was tested, error alerts are on, the client's admin account exists.
 
-## 8. Handover
+## 9. Handover
 Fill `HANDOVER.md`: live URLs, where each account is held and who owns it (never the secret itself), admin guide, training, support contact, warranty end date, maintenance options. The final invoice goes out with the handover.
 
 ## Change requests
