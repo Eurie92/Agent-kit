@@ -12,8 +12,11 @@ description: Library of proven standards per field (design, security, accessibil
 | Field | Sheet | Status |
 |---|---|---|
 | Software delivery | `software-delivery.md` | written |
+| UI visual design (tokens, type, color, spacing, components, motion, what to avoid) | `ui-visual-design.md` | written |
+| Web production (responsive, performance, SEO, finishing, launch checks) | `web-production.md` | written |
+| Product quality (forms, state, backend security, payments, support) | `product-quality.md` | written |
 
-Fields known to need a sheet: accessibility, web security, UI visual design, payments, privacy/data protection.
+Fields known to need a sheet: accessibility (full; the UI sheets hold the WCAG 2.2 AA basics), web security (full), payments, privacy/data protection.
 
 ## Using it
 1. List the fields the work touches.

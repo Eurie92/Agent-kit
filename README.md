@@ -139,7 +139,7 @@ flowchart LR
 | Ship | Your "yes" in `ship` | live URL |
 | Handover | Client gets access, guide and training | `docs/client/HANDOVER.md` |
 
-- **Good-looking by design, not by luck.** Phase 4 builds a design system from the client's logo and brand (color, type, spacing, radius) and the 3-5 key screens with realistic content, before any feature code.
+- **Good-looking by design, not by luck.** Phase 4 builds a design system from the client's logo and brand (color, type, spacing, radius) and the 3-5 key screens with realistic content, before any feature code. It follows three standards sheets: `ui-visual-design.md` (tokens, type, color, motion, what to avoid), `web-production.md` (responsive, speed, SEO, launch checks) and `product-quality.md` (forms, state, security, payments).
 - **You set the prices.** The agent never invents a rate.
 - **Scope stays signed.** New wishes after the proposal become change requests.
 - **No secrets in the repo.** Client logins and member data never go into files; `HANDOVER.md` says where each account is held, not the password.
@@ -277,6 +277,8 @@ New playbooks, standards sheets, installer fixes and clearer rules are all welco
 ## Credits
 
 Much of the rule set is adapted, in our own words, from [Aedwon's agent workflow](https://aedwon.site/workflow): the talk rules, the org chart and escalation path, the top-down spec flow, scope sizes, the standards library, decision records, proof before done, the outside audit and the lessons process. Thanks, Aedwon.
+
+The UI standards sheets draw on [Emil Kowalski's skills](https://github.com/emilkowalski/skills) (MIT), [Impeccable](https://github.com/pbakaus/impeccable) (Apache-2.0), [ui-skills](https://github.com/ibelick/ui-skills) (MIT) and a web developer friend's production checklist, rewritten in our own words and checked against WCAG 2.2, web.dev and OWASP.
 
 Where this kit differs: a `setup` interview writes each user's own models and chat style; merging to main needs the user's OK; bugs skip the spec flow; the `save`/`boot` handoff comes from another friend's setup; the outside auditor is optional and runs async.
 

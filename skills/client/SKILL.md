@@ -39,7 +39,7 @@ Run the `kickoff` flow with the brief and the chosen package as input; skip ques
 
 ## 4. Design (before any feature code)
 "Clean and good-looking" is decided here, not after the build.
-1. Build a design system first: color, type, spacing and radius tokens from the client's logo and brand, and one component set (buttons, inputs, cards, lists, navigation). Use the `standards` skill (UI visual design; accessibility: WCAG 2.2 AA contrast, 44 px touch targets) and the `frontend-design` skill if installed.
+1. Build a design system first: color, type, spacing and radius tokens from the client's logo and brand, and one component set (buttons, inputs, cards, lists, navigation). Follow the `standards` sheets `ui-visual-design.md`, `web-production.md` (websites) and `product-quality.md` (accounts, forms, payments) and the `frontend-design` skill if installed.
 2. Mobile first. Make the 3-5 key screens as a clickable prototype with realistic content (real-looking names, amounts and dates in the client's language), never lorem ipsum.
 3. Screenshot each screen at 375 px and 1280 px wide. Review them yourself before the user sees them: alignment, spacing rhythm, contrast, one primary action per screen, consistent use of the tokens.
 4. The user shows the screens to the client. Revisions count against the rounds in the proposal.
