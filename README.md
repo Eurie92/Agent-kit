@@ -10,7 +10,7 @@ Claude Code, Antigravity (Gemini) and Codex all follow the same workflow, from a
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Windows | macOS | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
-[Install](#install) · [Daily use](#daily-use) · [How it works](#how-it-works) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+[Install](#install) · [Daily use](#daily-use) · [Client work](#client-work) · [How it works](#how-it-works) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 </div>
 
@@ -26,6 +26,7 @@ Every agent tool has its own rule files, and every thread starts from zero. Agen
 | 📐 **Process only when it pays** | Real features get a scope pick, a short spec, a plan, then proof. |
 | 🧠 **Memory in files, not chat** | Say `save` at the end, `boot` in the next thread. Threads stay short and cheap. |
 | 🔍 **Outside review** | High-stakes work gets audited by a model from another vendor before it ships. |
+| 🤝 **Client work, end to end** | Brief, proposal, design approval, UAT sign-off and handover, each with a gate. |
 | ✋ **You stay in control** | Nothing merges to main, deploys or publishes without your "yes". |
 | 🧩 **Yours, not ours** | Your models, accounts and chat style live in git-ignored `local/` files. |
 
@@ -96,7 +97,8 @@ Open a new thread in any project and talk normally. These words steer the flow:
 | `boot` | The agent reads the project's `AGENTS.md` and `docs/STATE.md` and picks up where you left off. Missing? It offers to create them. |
 | *"fix the login bug"* | Small job: it writes a failing test, fixes it, shows the test passing. |
 | *"add dark mode"* | Real feature: you pick **minimal / balanced / hardened**, approve a short spec, then it plans, builds and proves it. |
-| `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, plan, scaffold. |
+| `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, design, plan, scaffold. |
+| `client` | Work for a paying client: brief, proposal, kickoff, design approval, build with demos, UAT sign-off, ship, handover. |
 | `audit` | A model from another vendor reviews the spec, plan or diff. It reports; it never edits. |
 | `ship` | Release gate: checklist, secrets scan, audit for high-stakes work, then waits for your "yes". |
 | `save` | Writes progress to `docs/STATE.md` so the next thread can `boot`. Use it at the end of a session. |
@@ -116,6 +118,34 @@ agent:  ...builds on feat/email-receipts... tests: 14 passed. Pushed.
 you:    save
 ```
 
+## Client work
+
+Say `client` when someone pays you to build an app or website. The `client` skill runs eight phases, and each one ends at a gate:
+
+```mermaid
+flowchart LR
+  A["1 Intake<br/>BRIEF"] --> B["2 Proposal<br/>3 packages"] --> C["3 Kickoff<br/>spec + plan"] --> D["4 Design<br/>tokens + screens"]
+  D --> E["5 Build<br/>staging + demos"] --> F["6 UAT<br/>client sign-off"] --> G["7 Ship<br/>live"] --> H["8 Handover<br/>access + training"]
+```
+
+| Phase | Who approves | File |
+|---|---|---|
+| Intake | Client confirms the brief | `docs/client/BRIEF.md` |
+| Proposal | Client picks a package, signs, pays the deposit | `docs/client/PROPOSAL.md` |
+| Kickoff | You approve spec Part A | `docs/SPEC.md`, `docs/PLAN.md` |
+| Design | Client approves the key screens (375 px and 1280 px) | `docs/design/` |
+| Build | You review each weekly demo on staging | feature branches |
+| UAT | Client signs off | `docs/client/UAT.md` |
+| Ship | Your "yes" in `ship` | live URL |
+| Handover | Client gets access, guide and training | `docs/client/HANDOVER.md` |
+
+- **Good-looking by design, not by luck.** Phase 4 builds a design system from the client's logo and brand (color, type, spacing, radius) and the 3-5 key screens with realistic content, before any feature code.
+- **You set the prices.** The agent never invents a rate.
+- **Scope stays signed.** New wishes after the proposal become change requests.
+- **No secrets in the repo.** Client logins and member data never go into files; `HANDOVER.md` says where each account is held, not the password.
+
+Templates live in `templates/client/`.
+
 ## How it works
 
 ```mermaid
@@ -129,21 +159,32 @@ flowchart LR
 ```
 
 - **Rules** (`rules/GLOBAL.md` + your `local/` files) load in every thread, so they stay short.
-- **Skills** load only when a task needs them: `setup`, `kickoff`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
+- **Skills** load only when a task needs them: `setup`, `kickoff`, `client`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
 - **Project facts** live in each project's `AGENTS.md` and `docs/` (templates in `templates/project/`).
 
 **Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
 
-**How delegation works.** There is no separate orchestrator program. Delegation is rules plus your harness:
+**Orchestration.** The lead model is the orchestrator. It talks to you, splits the work, hands parts to worker threads, and reviews every result before it is used. There is no separate orchestrator program; it is the rules plus your harness:
 
-1. `rules/GLOBAL.md` §4 tells the lead when to delegate: independent parts that can run in parallel, research beyond a couple of searches, full test or lint runs, reading more than about 5 files, and audits at gates. Small work stays with the lead.
+```mermaid
+flowchart LR
+  U["You"] <--> L["Lead (orchestrator)<br/>your thread"]
+  L -- "brief" --> W1["Implementation worker"]
+  L -- "brief" --> W2["Bulk worker<br/>tests · lint · mass reads"]
+  L -- "brief" --> W3["Researcher"]
+  L -. "hard call" .-> A["Advisor"]
+  L -. "gate" .-> AU["Auditor (optional)"]
+  W1 & W2 & W3 -- "pass/fail · errors · files" --> L
+```
+
+1. `rules/GLOBAL.md` §4 says when to delegate: independent parts that can run in parallel, research beyond a couple of searches, full test or lint runs, reading more than about 5 files, and audits at gates. Small work stays with the lead.
 2. `local/MODELS.md` says which model does each layer and on which account.
-3. The harness runs the worker. In T3 Code the lead calls `delegate_task` (for example with `providerInstanceId: "claudeTeam2"` for a second Claude account); in Claude Code alone it uses native subagents. Each worker gets a written brief and returns pass or fail, errors and files touched.
-4. The lead reviews every worker result before using it.
+3. The harness runs the workers. **In T3 Code** the lead calls `delegate_task`, which opens a child thread on any provider or account you set up (for example `providerInstanceId: "claudeTeam2"` for a second Claude account), runs independent jobs in parallel and returns each result to the lead. **In Claude Code alone** it uses native subagents. Each worker gets a written brief, does one job, and returns pass or fail, errors and files touched.
+4. The lead reviews every worker result. Weak results go back or up one layer (GLOBAL §4), never straight to you.
 
 Headless runs (`claude -p`, scripts) have no T3 tools, so they fall back to native subagents or do the work in one thread.
 
-Delegation is for big work. On a build a strong lead finishes in under about 15 minutes, the lead keeps everything itself, by design. In our own tests so far the kit's measured gains came from git hygiene, recorded decisions and docs, not from delegation.
+Orchestration is for big work. On a build a strong lead finishes in under about 15 minutes, the lead keeps everything itself, by design: a worker costs a brief and a review.
 
 <details>
 <summary><b>Where the installer writes</b></summary>
@@ -179,7 +220,8 @@ rules/
 local/                  your settings, git-ignored (written by setup)
 skills/
   setup/                interview → local/ → install → verify
-  kickoff/              idea → research → spec → plan → scaffold
+  kickoff/              idea → research → spec → design → plan → scaffold
+  client/               brief → proposal → design → UAT → handover
   feature/              scope pick → spec → plan → build → proof
   handoff/              save / boot through docs/STATE.md
   ship/                 pre-publish gate
@@ -187,6 +229,7 @@ skills/
   playbooks/            per project type: web, bot, extension, app, ...
   standards/            proven standards per field, cited in specs
 templates/project/      AGENTS.md + docs (STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH)
+templates/client/       BRIEF, PROPOSAL, UAT, HANDOVER for client work
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
 docs/                   this kit's own spec, plan, decisions and lessons
