@@ -96,7 +96,8 @@ Open a new thread in any project and talk normally. These words steer the flow:
 | `boot` | The agent reads the project's `AGENTS.md` and `docs/STATE.md` and picks up where you left off. Missing? It offers to create them. |
 | *"fix the login bug"* | Small job: it writes a failing test, fixes it, shows the test passing. |
 | *"add dark mode"* | Real feature: you pick **minimal / balanced / hardened**, approve a short spec, then it plans, builds and proves it. |
-| `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, plan, scaffold. |
+| `/kickoff` or `kickoff` | New project: brainstorm, stack research, spec, design, plan, scaffold. |
+| `client` | Work for a paying client: brief, proposal, kickoff, design approval, build with demos, UAT sign-off, ship, handover. |
 | `audit` | A model from another vendor reviews the spec, plan or diff. It reports; it never edits. |
 | `ship` | Release gate: checklist, secrets scan, audit for high-stakes work, then waits for your "yes". |
 | `save` | Writes progress to `docs/STATE.md` so the next thread can `boot`. Use it at the end of a session. |
@@ -129,7 +130,7 @@ flowchart LR
 ```
 
 - **Rules** (`rules/GLOBAL.md` + your `local/` files) load in every thread, so they stay short.
-- **Skills** load only when a task needs them: `setup`, `kickoff`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
+- **Skills** load only when a task needs them: `setup`, `kickoff`, `client`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
 - **Project facts** live in each project's `AGENTS.md` and `docs/` (templates in `templates/project/`).
 
 **Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
@@ -179,7 +180,8 @@ rules/
 local/                  your settings, git-ignored (written by setup)
 skills/
   setup/                interview → local/ → install → verify
-  kickoff/              idea → research → spec → plan → scaffold
+  kickoff/              idea → research → spec → design → plan → scaffold
+  client/               brief → proposal → design → UAT → handover
   feature/              scope pick → spec → plan → build → proof
   handoff/              save / boot through docs/STATE.md
   ship/                 pre-publish gate
@@ -187,6 +189,7 @@ skills/
   playbooks/            per project type: web, bot, extension, app, ...
   standards/            proven standards per field, cited in specs
 templates/project/      AGENTS.md + docs (STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH)
+templates/client/       BRIEF, PROPOSAL, UAT, HANDOVER for client work
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
 docs/                   this kit's own spec, plan, decisions and lessons

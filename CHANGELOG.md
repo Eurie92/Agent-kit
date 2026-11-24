@@ -4,6 +4,9 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 ### Added
+- `client` skill: client work from first message to handover in eight gated phases (intake, proposal, kickoff, design, build, UAT, ship, handover), with change requests and rules on prices and client data.
+- `templates/client/`: BRIEF, PROPOSAL, UAT and HANDOVER templates.
+- `kickoff`: a design step (tokens, key screens, screenshots at 375 px and 1280 px, user approval) before the plan.
 - README: "How delegation works" explains how the lead, `local/MODELS.md` and the harness (`delegate_task` in T3 Code, native subagents elsewhere) fit together.
 - GLOBAL §6: a change to user-visible behavior updates the README or docs in the same change, or says why not.
 
