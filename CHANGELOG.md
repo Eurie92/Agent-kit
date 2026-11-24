@@ -3,6 +3,8 @@
 All notable changes to this kit. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+
+## [0.6.0] - 2026-11-24
 ### Added
 - `client`: a QA check phase (6 of 9) between build and UAT. We check the release candidate on staging against the spec, the proposal and the standards sheets, with proof per row, before the client sees it. New template `templates/client/QA.md`.
 - `standards`: three new sheets. `ui-visual-design.md` (tokens, type, color, spacing, components, motion with exact durations and easings, and a list of "AI slop" tells to avoid), `web-production.md` (responsive, Core Web Vitals, images, fonts, premium motion with reduced-motion rules, SEO, launch checks) and `product-quality.md` (forms, state, payments, security, support). Conflicts between sources are resolved in the sheets.
