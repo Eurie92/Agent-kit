@@ -15,8 +15,10 @@ description: Library of proven standards per field (design, security, accessibil
 | UI visual design (tokens, type, color, spacing, components, motion, what to avoid) | `ui-visual-design.md` | written |
 | Web production (responsive, performance, SEO, finishing, launch checks) | `web-production.md` | written |
 | Product quality (forms, state, backend security, payments, support) | `product-quality.md` | written |
+| Web security (webhook signatures, OAuth/PKCE, secrets, rate limits, SSRF, ASVS, logging) | `web-security.md` | written |
+| AI agent security (prompt injection, excessive agency, approvals, identity, credential isolation, exfiltration, audit, kill switch) | `ai-agent-security.md` | written |
 
-Fields known to need a sheet: accessibility (full; the UI sheets hold the WCAG 2.2 AA basics), web security (full), payments, privacy/data protection.
+Fields known to need a sheet: accessibility (full; the UI sheets hold the WCAG 2.2 AA basics), payments, privacy/data protection.
 
 ## Using it
 1. List the fields the work touches.
