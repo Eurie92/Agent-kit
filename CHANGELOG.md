@@ -3,6 +3,11 @@
 All notable changes to this kit. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- `bots` skill: set up a named agent with its own folder that runs on a schedule or a signed webhook. Lite tier on stock T3 Code (a scheduled task whose prompt loads the bot folder, using `schedule_task`); Full tier notes for a private T3 Code fork (rebrand before sharing). Safe defaults and ten security rules taken from the new security sheets.
+- `templates/bots/`: `SOUL.md`, `MEMORY.md`, `AGENTS.md`, `bot.json`, and four starter bots (`saver`, `reviewer`, `shipper`, `client-update`), each with a ready `schedule_task` input.
+- `standards`: `web-security.md` and `ai-agent-security.md` sheets (OWASP ASVS, OWASP Top 10 for LLM Applications 2025, OWASP AI Agent Security Cheat Sheet).
+- README: "Bots" section.
 
 ## [0.6.0] - 2026-11-24
 ### Added

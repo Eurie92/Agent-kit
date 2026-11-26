@@ -148,6 +148,16 @@ flowchart LR
 
 Templates live in `templates/client/`.
 
+## Bots
+
+Say `bot` when you want an agent that works without being asked each time: a nightly save, a review of every new pull request, a daily client update. A bot is a named agent with its own folder (`SOUL.md` who it is, `MEMORY.md` what it learned, `AGENTS.md` its rules, `bot.json`). It wakes on a schedule or a signed webhook, does one job and reports in a normal thread.
+
+- **Lite** runs on stock T3 Code: a scheduled task whose prompt loads the bot folder. No fork needed.
+- **Full** is a Settings → Bots feature in a private T3 Code fork. It is not in this kit, and any build you share must be rebranded away from "T3 Code".
+- Safe defaults: owner only, Ask first, no outward action without your "yes", a kill switch you test. Four starters are in `templates/bots/starters/`: `saver`, `reviewer`, `shipper`, `client-update`.
+
+See `skills/bots/SKILL.md`.
+
 ## How it works
 
 ```mermaid
@@ -161,7 +171,7 @@ flowchart LR
 ```
 
 - **Rules** (`rules/GLOBAL.md` + your `local/` files) load in every thread, so they stay short.
-- **Skills** load only when a task needs them: `setup`, `kickoff`, `client`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`.
+- **Skills** load only when a task needs them: `setup`, `kickoff`, `client`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`, `bots`.
 - **Project facts** live in each project's `AGENTS.md` and `docs/` (templates in `templates/project/`).
 
 **Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
@@ -230,8 +240,10 @@ skills/
   audit/                outside review by another vendor's model
   playbooks/            per project type: web, bot, extension, app, ...
   standards/            proven standards per field, cited in specs
+  bots/                 named agents on a schedule or webhook (Lite and Full)
 templates/project/      AGENTS.md + docs (STATE, SPEC, PLAN, DECISIONS, LESSONS, RESEARCH)
 templates/client/       BRIEF, PROPOSAL, QA, UAT, HANDOVER for client work
+templates/bots/         SOUL, MEMORY, AGENTS, bot.json + four starter bots
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
 docs/                   this kit's own spec, plan, decisions and lessons

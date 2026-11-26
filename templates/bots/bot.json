@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "id": "<bot-id>",
+  "slug": "<bot-slug>",
+  "name": "<Bot name>",
+  "createdAt": "<YYYY-MM-DDTHH:MM:SSZ>",
+  "lite": {
+    "owner": "<owner name or handle>",
+    "permissionMode": "ask",
+    "whoCanAsk": "owner only: schedule, or a signed webhook",
+    "tasks": [
+      "<exact title of each scheduled task for this bot>"
+    ],
+    "stop": "Set each task in `tasks` to enabled=false with schedule_task, or delete it. Rotate webhook URLs in Settings."
+  }
+}
