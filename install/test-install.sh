@@ -36,13 +36,13 @@ run() {
   # run KIT HOME [FLAGS...]: runs the installer, sets OUT (stdout + stderr) and CODE.
   local kit=$1 home=$2
   shift 2
-  OUT=$(HOME="$home" "$INSTALL_BASH" "$kit/install/install.sh" "$@" 2>&1)
+  OUT=$(HOME="$home" T3CODE_HOME="${TEST_T3_HOME:-}" "$INSTALL_BASH" "$kit/install/install.sh" "$@" 2>&1)
   CODE=$?
 }
 
 make_kit() {
-  # make_kit DIR [nolocal]: copies install/, rules/ and skills/, plus test local/ files.
-  mkdir -p "$1" && cp -R "$REPO/install" "$REPO/rules" "$REPO/skills" "$1/" || exit 1
+  # make_kit DIR [nolocal]: copies install/, rules/, skills/ and templates/, plus test local/ files.
+  mkdir -p "$1" && cp -R "$REPO/install" "$REPO/rules" "$REPO/skills" "$REPO/templates" "$1/" || exit 1
   if [ "$2" != nolocal ]; then
     mkdir -p "$1/local"
     printf '# Model routing (test)\n\n- Lead: test model\n' > "$1/local/MODELS.md"
@@ -241,6 +241,36 @@ HZ=$T/home-big
 mkdir -p "$HZ"
 run "$KB" "$HZ" --harness codex
 check 'big codex file: size warning' 'hasf "Codex reads 32 KiB in total"'
+
+# --- Bot templates (T3CODE_HOME)
+HT3=$T/home-t3
+T3D=$T/t3-existing
+mkdir -p "$HT3" "$T3D/bots/other-bot"
+echo keep > "$T3D/bots/other-bot/SOUL.md"
+TEST_T3_HOME=$T3D
+run "$K" "$HT3" --harness claude --dry-run
+check 't3 dry run: exit 0 and writes nothing' '[ "$CODE" = 0 ] && hasf "Dry run: " && [ ! -e "$T3D/bots/templates" ]'
+run "$K" "$HT3" --harness claude
+check 't3 install: exit 0' '[ "$CODE" = 0 ]'
+for b in saver reviewer shipper client-update; do
+  check "t3 install: kit-$b/template.json byte-identical" 'cmp -s "$T3D/bots/templates/kit-'"$b"'/template.json" "$K/templates/bots/starters/'"$b"'/template.json"'
+done
+run "$K" "$HT3" --harness claude
+check 't3 second run: Nothing to change' '[ "$CODE" = 0 ] && hasf "Done. Nothing to change."'
+printf '{"bad":true}\n' > "$T3D/bots/templates/kit-saver/template.json"
+run "$K" "$HT3" --harness claude
+check 't3 overwrite: updated and backed up' '[ "$CODE" = 0 ] && hasf "update  $T3D/bots/templates/kit-saver/template.json" && cmp -s "$T3D/bots/templates/kit-saver/template.json" "$K/templates/bots/starters/saver/template.json"'
+run "$K" "$HT3" --harness claude --uninstall
+check 't3 uninstall: removes kit-* and empty templates dir' '[ "$CODE" = 0 ] && [ ! -e "$T3D/bots/templates" ]'
+check 't3 uninstall: leaves unrelated bots/ folder alone' '[ -f "$T3D/bots/other-bot/SOUL.md" ] && contains "$T3D/bots/other-bot/SOUL.md" keep'
+
+HT3M=$T/home-t3-missing
+T3M=$T/t3-missing
+mkdir -p "$HT3M"
+TEST_T3_HOME=$T3M
+run "$K" "$HT3M" --harness claude
+check 't3 missing home: exit 0, skipped and creates nothing' '[ "$CODE" = 0 ] && hasf "bot templates skipped" && [ ! -e "$T3M" ]'
+TEST_T3_HOME=
 
 echo
 echo "PASS: $PASS  FAIL: $FAIL"
