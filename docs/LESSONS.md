@@ -19,3 +19,9 @@ User's words: "bakit palagi ka tanong ng tanong sinabi kona tapusin mo nga lahat
 What was wrong: the user said "finish all of it" twice, yet the agent ended the work by asking for OK to merge to main and to delete merged branches.
 Why it got through: GLOBAL §8 says to ask before merging and deleting branches, and the agent did not treat "finish everything" as that approval.
 Fix (instruction): `local/PREFS.md` now says "finish everything" approves every step needed (commit, push, merge, delete merged branches), and replies end with a report, not a question. Open items are listed as notes.
+
+## 2026-11-27 Lead ran long jobs itself instead of delegating to Hydrogen
+User's words: "Check mo nga thread bat parang di ginagamit si antigravity" (English: "Check the thread, why does it seem Antigravity is not being used?"), then "Go then also fiz this issue so it don't happened again"
+What was wrong: after workers moved to Gemini 4 Hydrogen on the Antigravity pool, a running lead thread (Opus) acknowledged the change but delegated nothing. It ran full test, typecheck, lint and check runs itself (one about 25 minutes) and did build work in its own thread.
+Why it got through: GLOBAL §4 listed "full test/lint runs" as delegable, but gave no concrete trigger, so the lead kept its habit of running checks itself to get proof. The routing update was also sent as a note, not as a required behavior change.
+Fix (instruction): GLOBAL §4 now has a check before every command or read: over about 2 minutes or more than about 5 files means delegate to bulk; the lead runs only quick targeted checks. It also says running threads must be told about a routing change as a message. The running thread was steered with the same rule.

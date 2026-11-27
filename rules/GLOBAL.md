@@ -25,6 +25,8 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 
 ## 4. Delegation
 - Lead does small work itself. Delegate only: independent parts that can run in parallel, research beyond a couple of searches, full test/lint runs, reading more than about 5 files, audits at gates.
+- Check before every command or read: will it take more than about 2 minutes (full or package-wide test, typecheck, lint, check or build runs) or read more than about 5 files? If yes, delegate it (bulk role) and wait for pass/fail; do not run it in the lead's thread. The lead runs only quick targeted checks (one test file, under 2 minutes) and reviews worker results.
+- After a routing change, threads already running keep their old habits. Send each one the change as a message; do not assume it read the new file.
 - Say in one line what you delegated and why. Workers get a written brief, do one job, and return pass/fail, errors and files touched. No raw logs in the lead's context.
 - Escalate up one layer, never to the auditor: unclear bulk result → implementation; implementation fails review or tests twice → lead; lead stuck on a trigger case → advisor.
 - Advisor triggers only: security/auth/payments, a bug still failing after 2 fix attempts, a big design ruling. Send a one-page brief (question, relevant code or error, what was tried); ask for under 300 words. One-line notice to the user.
