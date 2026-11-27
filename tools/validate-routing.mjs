@@ -45,7 +45,7 @@ function check(schema, value, path, root, errors) {
     const props = schema.properties ?? {};
     for (const [k, v] of Object.entries(value)) {
       if (schema.propertyNames) check(schema.propertyNames, k, `${path} key "${k}"`, root, errors);
-      if (k in props) check(props[k], v, `${path}.${k}`, root, errors);
+      if (Object.hasOwn(props, k)) check(props[k], v, `${path}.${k}`, root, errors);
       else if (schema.additionalProperties === false) errors.push(`${path}: unknown field "${k}"`);
       else if (typeOf(schema.additionalProperties) === 'object') check(schema.additionalProperties, v, `${path}.${k}`, root, errors);
     }

@@ -55,6 +55,7 @@
       "description": "Where workers run when their account is near its limit. Absent when there is one account.",
       "type": "object",
       "additionalProperties": false,
+      "required": ["provider"],
       "properties": {
         "provider": { "$ref": "#/$defs/provider" },
         "providerInstanceId": { "$ref": "#/$defs/instanceId" },

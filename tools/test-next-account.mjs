@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Tests for tools/next-account.mjs. Run: node tools/test-next-account.mjs
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -119,6 +119,16 @@ expect('validator: empty accounts, bad cooldown, bad pool name', () => {
   return ['at least 1', 'less than 0.1', 'key "bad name"'].every((w) => errs.includes(w)) ? '' : errs;
 });
 
+expect('validator: fallback needs a provider', () => {
+  const r = routing(); delete r.fallback.provider;
+  return validateRouting(r).some((e) => e.includes('$.fallback: missing "provider"')) ? '' : JSON.stringify(validateRouting(r));
+});
+expect('validator: prototype keys are unknown fields', () => {
+  const r = routing(); r.roles.lead = JSON.parse('{"provider":"claude","model":"claude-opus-5-5","constructor":"x"}');
+  return validateRouting(r).some((e) => e.includes('unknown field "constructor"')) ? '' : JSON.stringify(validateRouting(r));
+});
+expect('pick: prototype role name is refused', () => { try { pick(routing(), empty, 'constructor', { now: NOW }); return 'no error'; } catch { return ''; } });
+
 // CLI: --spent writes state, the next pick skips it, --clear forgets it.
 expect('CLI round trip', () => {
   const dir = mkdtempSync(join(tmpdir(), 'next-account-'));
@@ -134,6 +144,15 @@ expect('CLI round trip', () => {
     run('--clear', 'ag1');
     const third = JSON.parse(run('implementation'));
     const status = run('--status');
+    const refused = (...args) => { try { execFileSync(process.execPath, [join(here, 'next-account.mjs'), '--routing', rf, '--state', sf, ...args], { stdio: 'pipe' }); return false; } catch { return true; } };
+    if (!refused('--spent', '--status')) return 'flag taken as a value: --spent --status';
+    if (!refused('--spent', 'ag1', '--status')) return 'two modes accepted: --spent ag1 --status';
+    writeFileSync(sf, 'null');
+    run('--clear', 'ag1');
+    const nullState = readFileSync(sf, 'utf8').replace(/\s/g, '');
+    if (nullState !== '{"version":1,"spent":{}}') return `null state not repaired: ${nullState}`;
+    const leftovers = readdirSync(dir).filter((f) => f.endsWith('.tmp'));
+    if (leftovers.length) return `temp files left: ${leftovers}`;
     return eq([first.providerInstanceId, out[0].startsWith('marked ag1'), second.providerInstanceId, saved.spent.ag1.reason, third.providerInstanceId, status.includes('1. ag1: free')], ['ag1', true, 'ag2', 'quota', 'ag1', true]);
   } finally {
     rmSync(dir, { recursive: true, force: true });

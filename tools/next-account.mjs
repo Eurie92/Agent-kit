@@ -16,7 +16,7 @@
 // orchestrator_capabilities, providers with canRunChildTask). Listed pool accounts missing from
 // it are skipped; with the pool's addNew, unlisted accounts on the pool's driver are added.
 // For tests and other homes: --routing <file>, --state <file>, --now <ISO time>.
-import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateRouting, fallbackModel } from './validate-routing.mjs';
@@ -64,7 +64,7 @@ export function poolAccounts(pool, available) {
 // target: "delegate_task" (child on an account), "native" (native subagent on the main account) or
 // "none" (everything is at its limit).
 export function pick(routing, state, role, { available, now = new Date() } = {}) {
-  const r = routing.roles?.[role];
+  const r = Object.hasOwn(routing.roles ?? {}, role) ? routing.roles[role] : undefined;
   if (!r) throw new Error(`no role "${role}" in routing (roles: ${Object.keys(routing.roles ?? {}).join(', ')})`);
   if (role === 'lead') throw new Error('the lead runs in your own thread; pick a worker role');
   const skipped = [];
@@ -116,16 +116,25 @@ export function markSpent(routing, state, id, { until, reason, now = new Date() 
   return { version: 1, spent };
 }
 
-function readJson(file, fallback) {
-  if (!existsSync(file)) return fallback;
-  return JSON.parse(readFileSync(file, 'utf8'));
+function readState(file) {
+  const data = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null;
+  return { version: 1, spent: data && typeof data.spent === 'object' && data.spent ? data.spent : {} };
 }
 
-function writeState(file, state) {
+// Applies change() to the state on disk and writes it back. Re-reads right before writing and uses
+// a unique temp file, so two threads marking accounts at once do not clobber each other's file.
+function updateState(file, change) {
   mkdirSync(dirname(file), { recursive: true });
-  const tmp = `${file}.tmp`;
-  writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`);
-  renameSync(tmp, file);
+  const next = change(readState(file));
+  const tmp = `${file}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
+  writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`);
+  try {
+    renameSync(tmp, file);
+  } catch (e) {
+    rmSync(tmp, { force: true });
+    throw e;
+  }
+  return next;
 }
 
 function parseArgs(argv) {
@@ -134,12 +143,13 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (valued.has(a)) {
-      if (i + 1 >= argv.length) throw new Error(`${a} needs a value`);
+      if (i + 1 >= argv.length || argv[i + 1].startsWith('--')) throw new Error(`${a} needs a value`);
       opts[a.slice(2)] = argv[++i];
     } else if (a === '--clear' || a === '--status') opts[a.slice(2)] = true;
     else if (a.startsWith('--')) throw new Error(`unknown option ${a}`);
     else opts._.push(a);
   }
+  if ([opts.status, opts.clear, opts.spent].filter(Boolean).length > 1) throw new Error('use only one of --status, --clear, --spent');
   return opts;
 }
 
@@ -169,19 +179,17 @@ function main(argv) {
   const routing = JSON.parse(readFileSync(routingFile, 'utf8'));
   const errors = validateRouting(routing);
   if (errors.length) throw new Error(`${routingFile} is not valid (run node tools/validate-routing.mjs):\n  ${errors.join('\n  ')}`);
-  let state = readJson(stateFile, { version: 1, spent: {} });
+  let state = readState(stateFile);
 
   if (o.status) { console.log(status(routing, state, now)); return 0; }
   if (o.clear) {
     const id = o._[0];
-    state = { version: 1, spent: id ? Object.fromEntries(Object.entries(state.spent ?? {}).filter(([k]) => k !== id)) : {} };
-    writeState(stateFile, state);
+    updateState(stateFile, (st) => ({ version: 1, spent: id ? Object.fromEntries(Object.entries(st.spent).filter(([k]) => k !== id)) : {} }));
     console.log(id ? `cleared ${id}` : 'cleared all accounts');
     return 0;
   }
   if (o.spent) {
-    state = markSpent(routing, state, o.spent, { until: o.until, reason: o.reason, now });
-    writeState(stateFile, state);
+    state = updateState(stateFile, (st) => markSpent(routing, st, o.spent, { until: o.until, reason: o.reason, now }));
     console.log(`marked ${o.spent} at limit until ${state.spent[o.spent].until}`);
     if (!o._.length) return 0;
   }
