@@ -11,6 +11,9 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 - `standards`: `web-security.md` and `ai-agent-security.md` sheets (OWASP ASVS, OWASP Top 10 for LLM Applications 2025, OWASP AI Agent Security Cheat Sheet).
 - README: "Bots" section.
 
+### Changed
+- GLOBAL §4: a concrete delegation check. Any command or read expected to take more than about 2 minutes (full or package-wide test, typecheck, lint, check or build runs) or to read more than about 5 files goes to the bulk role; the lead runs only quick targeted checks. Running threads must be told about a routing change as a message.
+
 ## [0.6.0] - 2026-11-24
 ### Added
 - `client`: a QA check phase (6 of 9) between build and UAT. We check the release candidate on staging against the spec, the proposal and the standards sheets, with proof per row, before the client sees it. New template `templates/client/QA.md`.
