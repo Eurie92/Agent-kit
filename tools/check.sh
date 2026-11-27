@@ -54,6 +54,7 @@ rm -f "${TMPDIR:-/tmp}/agent-kit-links.$$"
 if command -v node >/dev/null 2>&1; then
   node tools/validate-routing.mjs || fail "routing file(s) do not match schemas/routing.schema.json"
   node tools/test-validate-routing.mjs >/dev/null || fail "tools/test-validate-routing.mjs failed (run it to see why)"
+  node tools/test-next-account.mjs >/dev/null || fail "tools/test-next-account.mjs failed (run it to see why)"
 else
   echo "note: node not found, skipping routing checks"
 fi

@@ -29,7 +29,7 @@ Show one short list, or say "no clashes" in one line.
 - Skip a question that step 1 already answered, and say what you found.
 
 1. **Tools.** Which do you use: Claude Code, Antigravity, Codex, Gemini CLI? Inside T3 Code or on their own? This sets the installer's harness list.
-2. **Models and accounts.** Which providers and plans do you have? Is there a second account for workers? Ask for labels only, never tokens.
+2. **Models and accounts.** Which providers and plans do you have? Is there a second account for workers? Several accounts on one provider (for example five Antigravity accounts in T3 Code)? Then offer an account pool: workers use them in turn and move on when one hits its limit. In T3 Code, read the account ids from `orchestrator_capabilities` instead of asking. Ask for labels only, never tokens.
 3. **Routing.** Pick a preset from `rules/MODELS.example.md`:
    - A: one vendor (pick this when the user wants one vendor only; the auditor, if any, is a same-vendor model in a fresh context);
    - B: one vendor plus an outside auditor (recommended when they can run a model from a second vendor, for example Gemini through Antigravity or GPT through Codex; a second account with the same vendor does not count);
@@ -60,7 +60,8 @@ Show, then wait for "yes":
 - **`local/MODELS.md`.** Start from the chosen preset in `rules/MODELS.example.md`. Include:
   - a table with Layer, Job, Model and Runs on;
   - a "Lead effort" section;
-  - the host notes that apply, for example the T3 `delegate_task` settings per provider.
+  - the host notes that apply, for example the T3 `delegate_task` settings per provider;
+  - with an account pool, an "Account pool" section: the account order, what comes after the pool, and the lead's steps (`next-account.mjs` before each delegation, `--spent` on a limit error). Copy the steps from `rules/MODELS.example.md`.
 
   With one account, workers share it, so leave out the Fallback row. With no auditor, write "none" in the Auditor row: `audit` then offers a fresh-context review by the advisor.
 - **`local/routing.json`.** The same routing, machine-readable, so hosts such as T3 Code do not parse the Markdown table. Build it from the same answers and write it in the same step as `MODELS.md`. Format below.
@@ -75,7 +76,7 @@ Show, then wait for "yes":
 - Show the output, then run it again without the dry-run option. Paste both outputs.
 
 ## 7. Verify
-- From the kit folder, run `node tools/validate-routing.mjs` and paste the output. It must say `ok` for `local/routing.json`. If `node` is not installed, say so and skip this check.
+- From the kit folder, run `node tools/validate-routing.mjs` and paste the output. It must say `ok` for `local/routing.json`. With pools, also run `node tools/next-account.mjs --status` and paste it. If `node` is not installed, say so and skip this check.
 - Ask the user to open a new thread and say `boot`. Or start a fresh child thread, ask it for its routing and chat style, and paste the answer. If neither is possible, check that the rule files now contain the `local/` text or imports.
 - Reply with:
   - what was set;
@@ -113,6 +114,26 @@ How to fill it from the answers:
 - **`leadEffort`.** From the Lead effort answer: `planning` is the high setting, `default` the other. "Always high" gives the same value in both.
 - **`excludedProviders` and `excludedModels`.** From every "no X" rule (for example "No Gemini" gives `["gemini"]`). Always write both arrays, empty when there is nothing. No role or fallback may use an excluded provider or model; the validator checks this.
 - **`fallback`.** From the Fallback row. Leave it out when there is one account. `modelOverrides` lists roles that use a different model there (for example Fable needs credits on the main account, so `advisor` is Opus).
+- **`pools`** (optional). Only when a provider has several accounts the user wants used in turn. One entry per pool:
+  - `driverKind`: the host driver (T3 Code: `driverKind` in `orchestrator_capabilities`, for example `antigravity`);
+  - `accounts`: the account ids in the order to try them;
+  - `addNew`: `true` so accounts added later join the end on their own;
+  - `cooldownHours`: how long a spent account is skipped when the error gives no reset time (default 5);
+  - `whenEmpty`: where the pool's roles go when every account is spent, with a model per pooled role.
+
+  Each worker role on the pool gets `"pool": "<name>"` and keeps `providerInstanceId` set to the first account, for tools that do not read pools. The validator checks that the pool exists, that `whenEmpty` has a model for every pooled role, and that `fallback` has a model it can run for every worker role (add `fallback.modelOverrides` when the pool's provider differs from the fallback's).
+
+  ```json
+  "pools": {
+    "antigravity": {
+      "driverKind": "antigravity",
+      "accounts": ["antigravity", "antigravity_2", "antigravity_antigravity_3"],
+      "addNew": true,
+      "cooldownHours": 5,
+      "whenEmpty": { "provider": "claude", "providerInstanceId": "claudeTeam2", "models": { "implementation": "claude-sonnet-5-5", "bulk": "claude-haiku-5-5", "researcher": "claude-sonnet-5-5" } }
+    }
+  }
+  ```
 - **`updatedAt`.** The current UTC time, `YYYY-MM-DDTHH:MM:SSZ`.
 
 **How T3 Code finds the file.** It reads `local/routing.json` in the kit folder: `$AGENT_KIT_HOME` if that environment variable is set, otherwise `~/Desktop/Agent-kit`. With no file, T3 uses its own defaults.

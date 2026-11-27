@@ -57,6 +57,22 @@ Before routing workers to another provider, time one child run in your host. A w
 ## Accounts
 Labels only (for example "main", "team 2"). Never put tokens, keys or passwords in this file.
 
+### Account pools (several accounts for one provider)
+When you have several accounts on the same host driver (for example five Antigravity accounts in T3 Code), workers can use them in turn: when one hits its usage limit, the next takes over, then a `whenEmpty` account, then the fallback.
+
+- `local/routing.json` lists them under `pools` (order, `addNew`, `cooldownHours`, `whenEmpty`), and each worker role names its pool.
+- With `addNew: true`, an account added in the host later joins the end of the pool on its own.
+- The lead runs `node tools/next-account.mjs <role> --available <driverKind:id,...>` before each delegation, and `--spent <id> <role>` when a worker fails on a limit. Spent accounts are kept in `local/account-state.json` until they reset (`cooldownHours`, default 5, or the reset time from the error), so every thread skips them.
+- `local/MODELS.md` gets an "Account pool" section with the order and these steps.
+
+Example (T3 Code, Gemini 4 Hydrogen workers on Antigravity accounts, then a second Claude account):
+
+| Order | Account | Model |
+|---|---|---|
+| 1–5 | Antigravity 1 to 5, then any new Antigravity account | Gemini 4 Hydrogen |
+| 6 | Claude Team 2 (`whenEmpty`) | Sonnet 5.5 (implementation, research), Haiku 5.5 (bulk) |
+| 7 | Main account, native subagent (`fallback`) | same Claude models |
+
 ## Machine-readable copy
 `setup` also writes `local/routing.json` from the same answers, for tools that must not parse this table (T3 Code reads it to fill roles and to honor exclusions such as "no Gemini"). The two files are kept in sync: every setup change rewrites both. A starting point is `rules/routing.example.json`; the format is `schemas/routing.schema.json`, and `node tools/validate-routing.mjs` checks it.
 
