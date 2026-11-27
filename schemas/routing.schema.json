@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Eurie92/Agent-kit/schemas/routing.schema.json",
+  "title": "Agent-kit routing (local/routing.json)",
+  "description": "Machine-readable copy of local/MODELS.md, written by the setup skill. Hosts such as T3 Code read it to pick a model per role. Keep it in sync with local/MODELS.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updatedAt", "roles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "updatedAt": {
+      "description": "UTC time of the last setup write, ISO 8601, for example 2026-11-27T08:00:00Z.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "roles": {
+      "description": "One entry per layer. Verifier is optional: when absent, hosts use the auditor, then the advisor.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["advisor", "lead", "implementation", "bulk", "researcher"],
+      "properties": {
+        "advisor": { "$ref": "#/$defs/role" },
+        "lead": { "$ref": "#/$defs/role" },
+        "implementation": { "$ref": "#/$defs/role" },
+        "bulk": { "$ref": "#/$defs/role" },
+        "researcher": { "$ref": "#/$defs/role" },
+        "auditor": { "$ref": "#/$defs/role" },
+        "verifier": { "$ref": "#/$defs/role" }
+      }
+    },
+    "leadEffort": {
+      "description": "Lead effort from the setup interview: planning is for kickoff, spec, plan and hard debugging; default is for everything else.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planning", "default"],
+      "properties": {
+        "planning": { "$ref": "#/$defs/effort" },
+        "default": { "$ref": "#/$defs/effort" }
+      }
+    },
+    "excludedModels": {
+      "description": "Model ids that must never be used on any role. Absent means none.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/modelId" }
+    },
+    "excludedProviders": {
+      "description": "Providers that must never be used on any role, for example [\"gemini\"]. Absent means none.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/provider" }
+    },
+    "fallback": {
+      "description": "Where workers run when their account is near its limit. Absent when there is one account.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "$ref": "#/$defs/provider" },
+        "providerInstanceId": { "$ref": "#/$defs/instanceId" },
+        "runsOn": { "$ref": "#/$defs/runsOn" },
+        "modelOverrides": {
+          "description": "Roles that use a different model on the fallback account.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "advisor": { "$ref": "#/$defs/modelId" },
+            "lead": { "$ref": "#/$defs/modelId" },
+            "implementation": { "$ref": "#/$defs/modelId" },
+            "bulk": { "$ref": "#/$defs/modelId" },
+            "researcher": { "$ref": "#/$defs/modelId" },
+            "auditor": { "$ref": "#/$defs/modelId" },
+            "verifier": { "$ref": "#/$defs/modelId" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "effort": { "enum": ["low", "medium", "high", "xhigh", "max"] },
+    "provider": {
+      "description": "Lowercase vendor family, for example claude, codex, gemini.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+    },
+    "modelId": {
+      "description": "The model id the host sends, for example claude-opus-5-5.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$"
+    },
+    "instanceId": {
+      "description": "Host account or provider-instance id, labels only (T3 Code: providerInstanceId).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "runsOn": {
+      "description": "Free-text label for where the role runs. Never a token or key.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "$ref": "#/$defs/provider" },
+        "model": { "$ref": "#/$defs/modelId" },
+        "effort": { "$ref": "#/$defs/effort" },
+        "runsOn": { "$ref": "#/$defs/runsOn" },
+        "providerInstanceId": { "$ref": "#/$defs/instanceId" }
+      }
+    }
+  }
+}

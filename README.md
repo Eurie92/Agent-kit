@@ -44,7 +44,7 @@ The agent clones the kit to `~/Desktop/Agent-kit` and runs the **`setup`** inter
 
 1. Reads your existing global rules and skills, and reports any clashes.
 2. Asks one question at a time: tools, models and accounts, routing, auditor, chat style, effort, your own always/never rules.
-3. Writes your answers to `local/MODELS.md` and `local/PREFS.md`.
+3. Writes your answers to `local/MODELS.md` (for you and your agents), `local/routing.json` (the same routing, for tools) and `local/PREFS.md`.
 4. Runs the installer as a dry run, shows you the result, then installs and checks it.
 
 Change your answers any time: say `setup`.
@@ -59,6 +59,7 @@ git clone https://github.com/Eurie92/Agent-kit "$HOME\Desktop\Agent-kit"
 cd "$HOME\Desktop\Agent-kit"
 mkdir local
 copy rules\MODELS.example.md local\MODELS.md   # edit: pick a preset, set your models
+copy rulesouting.example.json localouting.json   # optional: same routing for tools; keep in sync with MODELS.md
 notepad local\PREFS.md                          # chat style and personal rules (format in skills/setup/SKILL.md)
 powershell -ExecutionPolicy Bypass -File install\install.ps1 -DryRun   # preview
 powershell -ExecutionPolicy Bypass -File install\install.ps1           # install
@@ -73,6 +74,7 @@ git clone https://github.com/Eurie92/Agent-kit ~/Desktop/Agent-kit
 cd ~/Desktop/Agent-kit
 mkdir -p local
 cp rules/MODELS.example.md local/MODELS.md   # edit: pick a preset, set your models
+cp rules/routing.example.json local/routing.json   # optional: same routing for tools; keep in sync with MODELS.md
 nano local/PREFS.md                          # chat style and personal rules (format in skills/setup/SKILL.md)
 bash install/install.sh --dry-run            # preview
 bash install/install.sh                      # install
@@ -174,7 +176,7 @@ flowchart LR
 - **Skills** load only when a task needs them: `setup`, `kickoff`, `client`, `feature`, `handoff`, `ship`, `audit`, `playbooks`, `standards`, `bots`.
 - **Project facts** live in each project's `AGENTS.md` and `docs/` (templates in `templates/project/`).
 
-**Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`. A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
+**Model layers.** Pick a preset in `rules/MODELS.example.md`; yours lives in `local/MODELS.md`, with a machine-readable copy in `local/routing.json` (see [Routing file for tools](#routing-file-for-tools)). A lead model works in your thread and does small jobs itself. It hands parallel, bulk or research work to cheaper workers, asks an advisor model on rare hard calls, and can send high-stakes work to an optional outside auditor.
 
 **Orchestration.** The lead model is the orchestrator. It talks to you, splits the work, hands parts to worker threads, and reviews every result before it is used. There is no separate orchestrator program; it is the rules plus your harness:
 
@@ -190,13 +192,21 @@ flowchart LR
 ```
 
 1. `rules/GLOBAL.md` §4 says when to delegate: independent parts that can run in parallel, research beyond a couple of searches, full test or lint runs, reading more than about 5 files, and audits at gates. Small work stays with the lead.
-2. `local/MODELS.md` says which model does each layer and on which account.
+2. `local/MODELS.md` says which model does each layer and on which account (`local/routing.json` says the same to tools).
 3. The harness runs the workers. **In T3 Code** the lead calls `delegate_task`, which opens a child thread on any provider or account you set up (for example `providerInstanceId: "claudeTeam2"` for a second Claude account), runs independent jobs in parallel and returns each result to the lead. **In Claude Code alone** it uses native subagents. Each worker gets a written brief, does one job, and returns pass or fail, errors and files touched.
 4. The lead reviews every worker result. Weak results go back or up one layer (GLOBAL §4), never straight to you.
 
 Headless runs (`claude -p`, scripts) have no T3 tools, so they fall back to native subagents or do the work in one thread.
 
 Orchestration is for big work. On a build a strong lead finishes in under about 15 minutes, the lead keeps everything itself, by design: a worker costs a brief and a review.
+
+### Routing file for tools
+
+`setup` writes `local/routing.json` next to `local/MODELS.md`, from the same answers, and rewrites both on every change. Tools such as T3 Code read the JSON instead of parsing the Markdown table, to pick a model per role (lead, implementation, bulk, researcher, auditor or verifier) and to honor rules like "no Gemini".
+
+- **Where tools look.** `$AGENT_KIT_HOME/local/routing.json` if the `AGENT_KIT_HOME` environment variable is set, otherwise `~/Desktop/Agent-kit/local/routing.json`. With no file, a tool uses its own defaults.
+- **Shape.** `version`, `updatedAt`, `roles` (each `{ provider, model, effort?, runsOn?, providerInstanceId? }`), optional `leadEffort`, `excludedModels`, `excludedProviders` and `fallback`. Schema: [`schemas/routing.schema.json`](schemas/routing.schema.json). Example: [`rules/routing.example.json`](rules/routing.example.json).
+- **Check it.** `node tools/validate-routing.mjs` validates the example and your `local/routing.json` (Node 18+, no packages). `bash tools/check.sh` runs it too. The file holds labels only, never tokens or keys, and stays git-ignored.
 
 <details>
 <summary><b>Where the installer writes</b></summary>
@@ -229,6 +239,9 @@ INSTALL.md              instructions for an agent installing the kit
 rules/
   GLOBAL.md             always-on rules for every project and tool
   MODELS.example.md     model layers and routing presets
+  routing.example.json  example of local/routing.json
+schemas/
+  routing.schema.json   JSON Schema for local/routing.json
 local/                  your settings, git-ignored (written by setup)
 skills/
   setup/                interview → local/ → install → verify
@@ -246,6 +259,7 @@ templates/client/       BRIEF, PROPOSAL, QA, UAT, HANDOVER for client work
 templates/bots/         SOUL, MEMORY, AGENTS, bot.json + four starter bots
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
+tools/validate-routing.mjs   checks routing JSON against the schema (and its test)
 docs/                   this kit's own spec, plan, decisions and lessons
 ```
 </details>
