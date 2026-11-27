@@ -22,7 +22,7 @@ Use this skill for repeat or unattended work: a nightly save, a review of every 
 
 Start with Lite. Move to Full only if the owner runs the fork. Both use the same four files in the bot folder, so a Lite bot folder can move to Full later.
 
-**Full tier note.** Full needs the owner's private fork (turn on Settings → Labs → Bots, then Settings → Bots → New bot). T3 Code's `TRADEMARK.md` forbids sharing a build that still says "T3 Code". Any build shared with other people must be rebranded and clearly marked unofficial. This kit does not ship the fork.
+**Full tier note.** Full needs the owner's private fork (turn on Settings → Labs → Bots, then Settings → Bots → New bot). T3 Code's `TRADEMARK.md` forbids sharing a build that still says "T3 Code". Any build shared with other people must be rebranded and clearly marked unofficial. This kit does not ship the fork. After running the kit installer (when `~/.t3` or `T3CODE_HOME` exists), the four kit starters appear in the gallery under **Agent-kit**.
 
 ## Safe defaults
 

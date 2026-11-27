@@ -17,6 +17,8 @@
   kit edits are live. Antigravity does not follow junctions in its skills folder, so it gets copies
   (each with a .agent-kit-copy marker file). Links or copies of skills removed from the kit are pruned.
   Copied rules and Antigravity skills need a re-run after you edit the kit.
+  If T3 Code home ($env:T3CODE_HOME, or ~/.t3) exists, starter bot template.json files are copied to
+  <T3 home>/bots/templates/kit-<name>/template.json regardless of -Harness; otherwise skipped.
   Any file or copied skill it changes or removes is backed up first to ~/.agent-kit-backups/<timestamp>/.
 
 .PARAMETER DryRun
@@ -24,9 +26,10 @@
 
 .PARAMETER Harness
   Limit to some harnesses: claude, gemini, codex, comma-separated (for example -Harness claude,gemini). Default: all three.
+  Starter bot templates for T3 Code still run when T3 home exists.
 
 .PARAMETER Uninstall
-  Remove the marked blocks and the skill links and copies this script created.
+  Remove the marked blocks, skill links/copies and kit-* bot template folders this script created.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File install\install.ps1 -DryRun
@@ -49,7 +52,9 @@ if ($Harness.Count -eq 0 -or $badHarness.Count -gt 0) {
 }
 $Kit = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path.TrimEnd('\')
 $KitSkillsDir = Join-Path $Kit 'skills'
+$KitBotTemplatesDir = Join-Path $Kit 'templates\bots\starters'
 $HomeDir = $env:USERPROFILE.TrimEnd('\')
+$T3Home = if (-not [string]::IsNullOrWhiteSpace($env:T3CODE_HOME)) { $env:T3CODE_HOME.Trim().TrimEnd('\', '/') } else { Join-Path $HomeDir '.t3' }
 $Stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $BackupDir = Join-Path $HomeDir ".agent-kit-backups\$Stamp"
 $Start = '<!-- agent-kit:start (managed by Agent-kit install.ps1; edits inside are overwritten) -->'
@@ -294,6 +299,48 @@ $targets = @{
   }
 }
 
+function Set-BotTemplates {
+  $destRoot = Join-Path $T3Home 'bots\templates'
+  Write-Host "`n== bot templates =="
+  if (-not (Test-Path -LiteralPath $T3Home -PathType Container)) {
+    Write-Host "skip    T3 Code not found at $T3Home; bot templates skipped"
+    return
+  }
+  if (-not (Test-Path -LiteralPath $KitBotTemplatesDir -PathType Container)) { return }
+  foreach ($dir in Get-ChildItem -LiteralPath $KitBotTemplatesDir -Directory | Sort-Object Name) {
+    $src = Join-Path $dir.FullName 'template.json'
+    if (-not (Test-Path -LiteralPath $src -PathType Leaf)) { continue }
+    $destDir = Join-Path $destRoot ("kit-" + $dir.Name)
+    $dest = Join-Path $destDir 'template.json'
+    if ($Uninstall) {
+      if (Test-Path -LiteralPath $destDir -PathType Container) {
+        Backup-Item $destDir
+        $script:Changes++
+        Write-Step "remove  $destDir"
+        if (-not $DryRun) { Remove-Item -LiteralPath $destDir -Recurse -Force }
+      }
+      continue
+    }
+    if ((Test-Path -LiteralPath $dest -PathType Leaf) -and ((Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash -eq (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash)) {
+      Write-Host "ok      $dest (up to date)"
+      continue
+    }
+    $exists = Test-Path -LiteralPath $dest
+    $verb = if ($exists) { 'update' } else { 'copy  ' }
+    if ($exists) { Backup-Item $dest }
+    $script:Changes++
+    Write-Step "$verb  $dest <- $src"
+    if ($DryRun) { continue }
+    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    Copy-Item -LiteralPath $src -Destination $dest -Force
+  }
+  if ($Uninstall -and -not $DryRun -and (Test-Path -LiteralPath $destRoot -PathType Container)) {
+    if (@(Get-ChildItem -LiteralPath $destRoot -Force).Count -eq 0) {
+      Remove-Item -LiteralPath $destRoot -Force
+    }
+  }
+}
+
 Write-Host "Agent-kit: $Kit"
 foreach ($h in $Harness) {
   $t = $targets[$h]
@@ -308,6 +355,7 @@ foreach ($h in $Harness) {
     }
   }
 }
+Set-BotTemplates
 
 Write-Host ''
 if ($script:Changes -eq 0) { Write-Host 'Done. Nothing to change.' }

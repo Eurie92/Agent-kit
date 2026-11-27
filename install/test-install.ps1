@@ -8,6 +8,7 @@ $Repo = Split-Path $PSScriptRoot -Parent
 $Root = Join-Path ([IO.Path]::GetTempPath()) ("agent-kit-test-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $Root | Out-Null
 $realHome = $env:USERPROFILE
+$realT3Home = $env:T3CODE_HOME
 $script:pass = 0
 $script:fail = 0
 
@@ -18,15 +19,19 @@ function Check([string]$Name, [bool]$Ok, $Out = $null) {
     if ($Out) { $Out | ForEach-Object { Write-Host "       $_" } }
   }
 }
-function Run-Installer([string]$KitDir, [string]$HomeDir, [string[]]$More = @()) {
+function Run-Installer([string]$KitDir, [string]$HomeDir, [string[]]$More = @(), [string]$T3Home = '') {
   $env:USERPROFILE = $HomeDir
+  $env:T3CODE_HOME = $T3Home
   try {
     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $KitDir 'install\install.ps1') @More 2>&1 | ForEach-Object { "$_" }
     return @{ Out = @($out); Code = $LASTEXITCODE; Text = ($out -join "`n") }
-  } finally { $env:USERPROFILE = $realHome }
+  } finally {
+    $env:USERPROFILE = $realHome
+    $env:T3CODE_HOME = $realT3Home
+  }
 }
 function New-Kit([string]$Dir, [switch]$NoLocal) {
-  foreach ($d in 'install', 'rules', 'skills') { Copy-Item (Join-Path $Repo $d) (Join-Path $Dir $d) -Recurse }
+  foreach ($d in 'install', 'rules', 'skills', 'templates') { Copy-Item (Join-Path $Repo $d) (Join-Path $Dir $d) -Recurse }
   if (-not $NoLocal) {
     New-Item -ItemType Directory (Join-Path $Dir 'local') | Out-Null
     [IO.File]::WriteAllText((Join-Path $Dir 'local\MODELS.md'), "# Model routing (test)`n")
@@ -147,8 +152,44 @@ try {
   Check 'uninstall: kit untouched' (@(Get-ChildItem $kit -Recurse -File).Count -eq $kitFiles)
   $r = Run-Installer $kit $h @('-Uninstall')
   Check 'uninstall again: Nothing to change' ($r.Text -match 'Nothing to change') $r.Out
+
+  # Bot templates (T3CODE_HOME)
+  $ht3 = New-Home 'h-t3'
+  $t3Existing = Join-Path $ht3 't3'
+  $otherBotDir = Join-Path $t3Existing 'bots\other-bot'
+  New-Item -ItemType Directory -Force $otherBotDir | Out-Null
+  [IO.File]::WriteAllText((Join-Path $otherBotDir 'SOUL.md'), "keep`n")
+  $r = Run-Installer $kit $ht3 @('-Harness', 'claude', '-DryRun') -T3Home $t3Existing
+  Check 't3 dry run: exit 0 and writes nothing' ($r.Code -eq 0 -and $r.Text -match 'Dry run: ' -and -not (Test-Path (Join-Path $t3Existing 'bots\templates'))) $r.Out
+  $r = Run-Installer $kit $ht3 @('-Harness', 'claude') -T3Home $t3Existing
+  Check 't3 install: exit 0' ($r.Code -eq 0) $r.Out
+  $allMatch = $true
+  foreach ($b in 'saver', 'reviewer', 'shipper', 'client-update') {
+    $dst = Join-Path $t3Existing "bots\templates\kit-$b\template.json"
+    $src = Join-Path $kit "templates\bots\starters\$b\template.json"
+    if (-not (Test-Path $dst) -or (Compare-Object ([IO.File]::ReadAllBytes($dst)) ([IO.File]::ReadAllBytes($src))) -ne $null) {
+      $allMatch = $false
+    }
+  }
+  Check 't3 install: 4 template.json files byte-identical' $allMatch $r.Out
+  $r = Run-Installer $kit $ht3 @('-Harness', 'claude') -T3Home $t3Existing
+  Check 't3 second run: Nothing to change' ($r.Code -eq 0 -and $r.Text -match 'Nothing to change') $r.Out
+  $saverDst = Join-Path $t3Existing 'bots\templates\kit-saver\template.json'
+  [IO.File]::WriteAllText($saverDst, "{`"bad`":true}`n")
+  $r = Run-Installer $kit $ht3 @('-Harness', 'claude') -T3Home $t3Existing
+  $saverSrc = Join-Path $kit 'templates\bots\starters\saver\template.json'
+  Check 't3 overwrite: updated and backed up' ($r.Code -eq 0 -and $r.Text -match 'update\s+.*kit-saver' -and (Compare-Object ([IO.File]::ReadAllBytes($saverDst)) ([IO.File]::ReadAllBytes($saverSrc))) -eq $null) $r.Out
+  $r = Run-Installer $kit $ht3 @('-Harness', 'claude', '-Uninstall') -T3Home $t3Existing
+  Check 't3 uninstall: removes kit-* and empty templates dir' ($r.Code -eq 0 -and -not (Test-Path (Join-Path $t3Existing 'bots\templates'))) $r.Out
+  Check 't3 uninstall: leaves unrelated bots/ folder alone' ((Test-Path (Join-Path $otherBotDir 'SOUL.md')) -and [IO.File]::ReadAllText((Join-Path $otherBotDir 'SOUL.md')).Trim() -eq 'keep')
+
+  $ht3Missing = New-Home 'h-t3-missing'
+  $t3Missing = Join-Path $Root 't3-missing'
+  $r = Run-Installer $kit $ht3Missing @('-Harness', 'claude') -T3Home $t3Missing
+  Check 't3 missing home: exit 0, skipped and creates nothing' ($r.Code -eq 0 -and $r.Text -match 'bot templates skipped' -and -not (Test-Path $t3Missing)) $r.Out
 } finally {
   $env:USERPROFILE = $realHome
+  $env:T3CODE_HOME = $realT3Home
   cmd /c rmdir /s /q "$Root" 2>$null
 }
 Write-Host ""

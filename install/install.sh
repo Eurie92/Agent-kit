@@ -14,6 +14,8 @@
 # Claude and Codex skills are symlinks, so kit edits are live. Antigravity gets copies (each with a
 # .agent-kit-copy marker file). Links or copies of skills removed from the kit are pruned.
 # Copied rules and Antigravity skills need a re-run after you edit the kit.
+# If T3 Code home ($T3CODE_HOME, or ~/.t3) exists, starter bot template.json files are copied to
+# <T3 home>/bots/templates/kit-<name>/template.json regardless of --harness; otherwise skipped.
 # Any file or copied skill it changes or removes is backed up first to ~/.agent-kit-backups/<timestamp>/.
 #
 # Runs on bash 3.2 (the macOS default) and later, with POSIX tools only
@@ -26,7 +28,8 @@ Usage: bash install/install.sh [--dry-run] [--harness LIST] [--uninstall]
   --dry-run        Show what would change. Change nothing.
   --harness LIST   Limit to some harnesses: claude, gemini, codex, comma-separated
                    (for example --harness claude,gemini). Default: all three.
-  --uninstall      Remove the marked blocks and the skill links and copies this script created.
+                   Starter bot templates for T3 Code still run when T3 home exists.
+  --uninstall      Remove the marked blocks, skill links/copies and kit-* bot template folders this script created.
   -h, --help       Show this help.
 EOF
 }
@@ -74,12 +77,15 @@ fi
 
 KIT=$(cd "$(dirname "$0")/.." && pwd -P) || exit 1
 KIT_SKILLS="$KIT/skills"
+KIT_BOT_TEMPLATES="$KIT/templates/bots/starters"
 if [ -z "$HOME" ]; then
   echo "HOME is not set."
   exit 1
 fi
 HOME_DIR=${HOME%/}
 HOME_PHYS=$(cd "$HOME" 2>/dev/null && pwd -P) || HOME_PHYS=$HOME_DIR
+if [ -n "${T3CODE_HOME:-}" ]; then T3_HOME=$T3CODE_HOME; else T3_HOME="$HOME_DIR/.t3"; fi
+[ "$T3_HOME" = / ] || T3_HOME=${T3_HOME%/}
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR="$HOME_DIR/.agent-kit-backups/$STAMP"
 n=1
@@ -379,6 +385,53 @@ set_skill_copies() {
   remove_stale_skills "$dir"
 }
 
+set_bot_templates() {
+  local dest_root="$T3_HOME/bots/templates" dir name src dest_dir dest verb
+  say ""
+  say "== bot templates =="
+  if [ ! -d "$T3_HOME" ]; then
+    say "skip    T3 Code not found at $T3_HOME; bot templates skipped"
+    return 0
+  fi
+  [ -d "$KIT_BOT_TEMPLATES" ] || return 0
+  for dir in "$KIT_BOT_TEMPLATES"/*/; do
+    [ -d "$dir" ] || continue
+    dir=${dir%/}
+    name=$(basename "$dir")
+    src="$dir/template.json"
+    [ -f "$src" ] || continue
+    dest_dir="$dest_root/kit-$name"
+    dest="$dest_dir/template.json"
+    if [ "$UNINSTALL" = 1 ]; then
+      if [ -d "$dest_dir" ]; then
+        backup_item "$dest_dir"
+        CHANGES=$((CHANGES + 1))
+        step "remove  $dest_dir"
+        if [ "$DRY_RUN" = 0 ]; then rm -rf -- "$dest_dir" || die "cannot remove $dest_dir"; fi
+      fi
+      continue
+    fi
+    if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+      say "ok      $dest (up to date)"
+      continue
+    fi
+    if [ -e "$dest" ]; then
+      verb=update
+      backup_item "$dest"
+    else
+      verb='copy  '
+    fi
+    CHANGES=$((CHANGES + 1))
+    step "$verb  $dest <- $src"
+    [ "$DRY_RUN" = 1 ] && continue
+    mkdir -p "$dest_dir" || die "cannot create $dest_dir"
+    cp "$src" "$dest" || die "cannot copy $src"
+  done
+  if [ "$UNINSTALL" = 1 ] && [ "$DRY_RUN" = 0 ] && [ -d "$dest_root" ] && [ -z "$(ls -A "$dest_root")" ]; then
+    rmdir "$dest_root" || die "cannot remove $dest_root"
+  fi
+}
+
 say "Agent-kit: $KIT"
 for h in $HARNESS; do
   case $h in
@@ -403,6 +456,7 @@ for h in $HARNESS; do
     fi
   fi
 done
+set_bot_templates
 
 say ""
 if [ $CHANGES -eq 0 ]; then say 'Done. Nothing to change.'
