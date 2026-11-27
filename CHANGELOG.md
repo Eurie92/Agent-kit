@@ -4,6 +4,7 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 ### Added
+- `local/routing.json`: `setup` now writes a machine-readable copy of `local/MODELS.md` (roles, models, effort, accounts, excluded models and providers, fallback) from the same answers and keeps both in sync. T3 Code and other hosts read it at `$AGENT_KIT_HOME/local/routing.json`, falling back to `~/Desktop/Agent-kit/local/routing.json`. New `schemas/routing.schema.json`, `rules/routing.example.json`, and `tools/validate-routing.mjs` (no dependencies) with a test, run by `tools/check.sh` and CI.
 - `bots` skill: set up a named agent with its own folder that runs on a schedule or a signed webhook. Lite tier on stock T3 Code (a scheduled task whose prompt loads the bot folder, using `schedule_task`); Full tier notes for a private T3 Code fork (rebrand before sharing). Safe defaults and ten security rules taken from the new security sheets.
 - `templates/bots/`: `SOUL.md`, `MEMORY.md`, `AGENTS.md`, `bot.json`, and four starter bots (`saver`, `reviewer`, `shipper`, `client-update`), each with a ready `schedule_task` input.
 - `standards`: `web-security.md` and `ai-agent-security.md` sheets (OWASP ASVS, OWASP Top 10 for LLM Applications 2025, OWASP AI Agent Security Cheat Sheet).

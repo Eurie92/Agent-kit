@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Repo checks for contributors and CI. Run from anywhere: bash tools/check.sh
 # Checks: skill front matter, nothing tracked under local/, ASCII-only PowerShell files,
-# shell syntax, and relative links in Markdown files.
+# shell syntax, relative links in Markdown files, and routing JSON (needs node).
 cd "$(dirname "$0")/.." || exit 1
 FAILS=0
 fail() { echo "FAIL $*"; FAILS=$((FAILS + 1)); }
@@ -49,6 +49,14 @@ if [ -s "${TMPDIR:-/tmp}/agent-kit-links.$$" ]; then
   FAILS=$((FAILS + $(wc -l < "${TMPDIR:-/tmp}/agent-kit-links.$$")))
 fi
 rm -f "${TMPDIR:-/tmp}/agent-kit-links.$$"
+
+# 6. Routing files match schemas/routing.schema.json: the committed example, and local/routing.json when present.
+if command -v node >/dev/null 2>&1; then
+  node tools/validate-routing.mjs || fail "routing file(s) do not match schemas/routing.schema.json"
+  node tools/test-validate-routing.mjs >/dev/null || fail "tools/test-validate-routing.mjs failed (run it to see why)"
+else
+  echo "note: node not found, skipping routing checks"
+fi
 
 if [ "$FAILS" -eq 0 ]; then echo "check.sh: all checks passed"; exit 0; fi
 echo "check.sh: $FAILS problem(s)"

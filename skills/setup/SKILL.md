@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Install Agent-kit for a user, or change their setup. Interviews them one question at a time, writes local/MODELS.md and local/PREFS.md, runs the installer and verifies. Use when the user says "setup", "set up Agent-kit", "install Agent-kit", or wants to change their models, auditor or chat style.
+description: Install Agent-kit for a user, or change their setup. Interviews them one question at a time, writes local/MODELS.md, local/routing.json and local/PREFS.md, runs the installer and verifies. Use when the user says "setup", "set up Agent-kit", "install Agent-kit", or wants to change their models, auditor or chat style.
 ---
 
 # Setup
@@ -9,7 +9,7 @@ The shared rules stay as they are. Each user's choices go in `local/` in the kit
 
 ## 1. Read first (no questions yet)
 - **The kit.** Is it at `~/Desktop/Agent-kit`? If not, follow `INSTALL.md` step 1.
-- **Existing setup.** If `local/MODELS.md` or `local/PREFS.md` exists, this is a change, not a first install. Show the current choices, ask what to change, and skip the rest.
+- **Existing setup.** If `local/MODELS.md`, `local/routing.json` or `local/PREFS.md` exists, this is a change, not a first install. Show the current choices, ask what to change, and skip the rest. If `local/MODELS.md` exists but `local/routing.json` does not (a setup from before the JSON file), build the JSON from the table and ask only about what the table does not say.
 - **Global rule files.** Read `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md` and `~/.codex/AGENTS.md`. Text outside the `agent-kit:start` / `agent-kit:end` markers belongs to the user.
 - **Skill folders.** List `~/.claude/skills/`, `~/.gemini/config/skills/` and `~/.agents/skills/`. Note any folder with the same name as a kit skill.
 - **Tools.** Note which tools are present (those folders, or the CLIs on PATH).
@@ -51,7 +51,7 @@ If you cannot ask interactively (for example, a headless run), stop and ask for 
 ## 4. Confirm
 Show, then wait for "yes":
 - the answers;
-- the routing table;
+- the routing table (the JSON file is built from it, so it needs no separate confirmation);
 - the preferences text;
 - the files you will write;
 - the installer command.
@@ -63,6 +63,8 @@ Show, then wait for "yes":
   - the host notes that apply, for example the T3 `delegate_task` settings per provider.
 
   With one account, workers share it, so leave out the Fallback row. With no auditor, write "none" in the Auditor row: `audit` then offers a fresh-context review by the advisor.
+- **`local/routing.json`.** The same routing, machine-readable, so hosts such as T3 Code do not parse the Markdown table. Build it from the same answers and write it in the same step as `MODELS.md`. Format below.
+- **Keep the two in sync.** Every later setup change rewrites both files from the new answers. If you edit one by hand for any reason, update the other in the same change. Never leave them different.
 - **`local/PREFS.md`.** Use the format below.
 - Create `local/` if it is missing. Never commit it.
 
@@ -73,11 +75,47 @@ Show, then wait for "yes":
 - Show the output, then run it again without the dry-run option. Paste both outputs.
 
 ## 7. Verify
+- From the kit folder, run `node tools/validate-routing.mjs` and paste the output. It must say `ok` for `local/routing.json`. If `node` is not installed, say so and skip this check.
 - Ask the user to open a new thread and say `boot`. Or start a fresh child thread, ask it for its routing and chat style, and paste the answer. If neither is possible, check that the rule files now contain the `local/` text or imports.
 - Reply with:
   - what was set;
   - where it lives;
   - how to change it later (say "setup" again).
+
+## `local/routing.json` format
+Schema: `schemas/routing.schema.json` (strict: unknown fields are errors). Example: `rules/routing.example.json`. Labels only, never tokens or keys.
+
+```json
+{
+  "$schema": "../schemas/routing.schema.json",
+  "version": 1,
+  "updatedAt": "2026-11-27T08:00:00Z",
+  "roles": {
+    "advisor": { "provider": "claude", "model": "claude-fable-5-2", "effort": "medium", "runsOn": "Child thread, second account", "providerInstanceId": "claudeTeam2" },
+    "lead": { "provider": "claude", "model": "claude-opus-5-5", "runsOn": "User's thread, main account" },
+    "implementation": { "provider": "claude", "model": "claude-sonnet-5-5" },
+    "bulk": { "provider": "claude", "model": "claude-haiku-5-5" },
+    "researcher": { "provider": "claude", "model": "claude-sonnet-5-5" },
+    "auditor": { "provider": "claude", "model": "claude-fable-5-2", "effort": "high" }
+  },
+  "leadEffort": { "planning": "xhigh", "default": "medium" },
+  "excludedModels": [],
+  "excludedProviders": ["gemini"],
+  "fallback": { "provider": "claude", "runsOn": "Main account, native subagent", "modelOverrides": { "advisor": "claude-opus-5-5" } }
+}
+```
+
+How to fill it from the answers:
+- **`roles`.** One entry per row of the `MODELS.md` table. `advisor`, `lead`, `implementation`, `bulk` and `researcher` are required. Leave out `auditor` when the Auditor row says "none". `provider` is a lowercase vendor family (`claude`, `codex`, `gemini`). `model` is the model id the host sends (for example `claude-opus-5-5`), not the display name.
+- **`effort`.** `low`, `medium`, `high`, `xhigh` or `max`. Write it only when the table gives one for that role.
+- **`runsOn`.** Short label from the "Runs on" column. **`providerInstanceId`.** The account label the host uses, only when the host notes in `MODELS.md` give one (T3 Code: the `delegate_task` `providerInstanceId`, for example `claudeTeam2`). Leave it out when the role runs in the user's own thread.
+- **`verifier`.** Leave it out. Hosts use `verifier`, then `auditor`, then `advisor`, in that order. Write it only when the user wants a verifier that differs from the auditor.
+- **`leadEffort`.** From the Lead effort answer: `planning` is the high setting, `default` the other. "Always high" gives the same value in both.
+- **`excludedProviders` and `excludedModels`.** From every "no X" rule (for example "No Gemini" gives `["gemini"]`). Always write both arrays, empty when there is nothing. No role or fallback may use an excluded provider or model; the validator checks this.
+- **`fallback`.** From the Fallback row. Leave it out when there is one account. `modelOverrides` lists roles that use a different model there (for example Fable needs credits on the main account, so `advisor` is Opus).
+- **`updatedAt`.** The current UTC time, `YYYY-MM-DDTHH:MM:SSZ`.
+
+**How T3 Code finds the file.** It reads `local/routing.json` in the kit folder: `$AGENT_KIT_HOME` if that environment variable is set, otherwise `~/Desktop/Agent-kit`. With no file, T3 uses its own defaults.
 
 ## `local/PREFS.md` format
 ```markdown

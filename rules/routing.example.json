@@ -1,0 +1,21 @@
+{
+  "$schema": "../schemas/routing.schema.json",
+  "version": 1,
+  "updatedAt": "2026-11-27T00:00:00Z",
+  "roles": {
+    "advisor": { "provider": "claude", "model": "claude-fable-5-2", "effort": "medium", "runsOn": "Child thread, second Claude account", "providerInstanceId": "claudeTeam2" },
+    "lead": { "provider": "claude", "model": "claude-opus-5-5", "runsOn": "User's thread, main Claude account" },
+    "implementation": { "provider": "claude", "model": "claude-sonnet-5-5", "runsOn": "Child thread, second Claude account", "providerInstanceId": "claudeTeam2" },
+    "bulk": { "provider": "claude", "model": "claude-haiku-5-5", "runsOn": "Child thread, second Claude account", "providerInstanceId": "claudeTeam2" },
+    "researcher": { "provider": "claude", "model": "claude-sonnet-5-5", "runsOn": "Child thread, second Claude account", "providerInstanceId": "claudeTeam2" },
+    "auditor": { "provider": "claude", "model": "claude-fable-5-2", "effort": "high", "runsOn": "Child thread, second Claude account, fresh context", "providerInstanceId": "claudeTeam2" }
+  },
+  "leadEffort": { "planning": "xhigh", "default": "medium" },
+  "excludedModels": [],
+  "excludedProviders": [],
+  "fallback": {
+    "provider": "claude",
+    "runsOn": "Main account, native subagent",
+    "modelOverrides": { "advisor": "claude-opus-5-5", "auditor": "claude-opus-5-5" }
+  }
+}

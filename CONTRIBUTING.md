@@ -42,7 +42,8 @@ Run what matches your change. CI runs all of it on every pull request (Linux, ma
 
 | Changed | Run |
 |---|---|
-| Anything | `bash tools/check.sh` (skill front matter, no `local/` files, ASCII `.ps1`, shell syntax, Markdown links) |
+| Anything | `bash tools/check.sh` (skill front matter, no `local/` files, ASCII `.ps1`, shell syntax, Markdown links, routing JSON) |
+| `schemas/routing.schema.json`, `rules/routing.example.json` or `tools/validate-routing.mjs` | `node tools/validate-routing.mjs && node tools/test-validate-routing.mjs` (Node 18+, no packages) |
 | `install/install.sh` | `bash install/test-install.sh` |
 | `install/install.ps1` | `powershell -ExecutionPolicy Bypass -File install\test-install.ps1` |
 | A rule or skill | Install your branch (`--dry-run` first), open a fresh agent thread and try the flow you changed. Paste what happened in the pull request. |

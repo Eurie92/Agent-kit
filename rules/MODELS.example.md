@@ -56,3 +56,8 @@ Before routing workers to another provider, time one child run in your host. A w
 
 ## Accounts
 Labels only (for example "main", "team 2"). Never put tokens, keys or passwords in this file.
+
+## Machine-readable copy
+`setup` also writes `local/routing.json` from the same answers, for tools that must not parse this table (T3 Code reads it to fill roles and to honor exclusions such as "no Gemini"). The two files are kept in sync: every setup change rewrites both. A starting point is `rules/routing.example.json`; the format is `schemas/routing.schema.json`, and `node tools/validate-routing.mjs` checks it.
+
+Tools find it at `$AGENT_KIT_HOME/local/routing.json`, or `~/Desktop/Agent-kit/local/routing.json` when `AGENT_KIT_HOME` is not set.
