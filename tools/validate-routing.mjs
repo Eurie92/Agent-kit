@@ -2,7 +2,9 @@
 // Validates routing files against schemas/routing.schema.json. No dependencies (Node 18+).
 //   node tools/validate-routing.mjs              rules/routing.example.json, plus local/routing.json when present
 //   node tools/validate-routing.mjs <file>...    only those files
-// Besides the schema, it checks that no role uses an excluded provider or model.
+// Besides the schema, it checks that no role uses an excluded provider or model, that pools
+// are wired up (roles name a real pool, the pool's fallback has a model per role), and that the
+// top-level fallback has a model it can run for every worker role.
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -13,7 +15,8 @@ const typeOf = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : Number
 const sameType = (v, t) => typeOf(v) === t || (t === 'number' && typeOf(v) === 'integer');
 
 // Small JSON Schema subset: $ref (local), type, const, enum, pattern, minLength, maxLength,
-// required, properties, additionalProperties (false), items, uniqueItems.
+// minimum, maximum, required, properties, additionalProperties (false or a schema),
+// propertyNames, items, minItems, uniqueItems.
 function check(schema, value, path, root, errors) {
   if (schema.$ref) {
     const target = schema.$ref.replace(/^#\//, '').split('/').reduce((o, k) => o?.[k], root);
@@ -28,7 +31,12 @@ function check(schema, value, path, root, errors) {
     if (schema.maxLength !== undefined && value.length > schema.maxLength) errors.push(`${path}: longer than ${schema.maxLength}`);
     if (schema.pattern && !new RegExp(schema.pattern).test(value)) errors.push(`${path}: ${JSON.stringify(value)} does not match ${schema.pattern}`);
   }
+  if (typeof value === 'number') {
+    if (schema.minimum !== undefined && value < schema.minimum) errors.push(`${path}: less than ${schema.minimum}`);
+    if (schema.maximum !== undefined && value > schema.maximum) errors.push(`${path}: more than ${schema.maximum}`);
+  }
   if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) errors.push(`${path}: needs at least ${schema.minItems} item(s)`);
     if (schema.uniqueItems && new Set(value.map((v) => JSON.stringify(v))).size !== value.length) errors.push(`${path}: items must be unique`);
     if (schema.items) value.forEach((v, i) => check(schema.items, v, `${path}[${i}]`, root, errors));
   }
@@ -36,8 +44,10 @@ function check(schema, value, path, root, errors) {
     for (const k of schema.required ?? []) if (!(k in value)) errors.push(`${path}: missing "${k}"`);
     const props = schema.properties ?? {};
     for (const [k, v] of Object.entries(value)) {
+      if (schema.propertyNames) check(schema.propertyNames, k, `${path} key "${k}"`, root, errors);
       if (k in props) check(props[k], v, `${path}.${k}`, root, errors);
       else if (schema.additionalProperties === false) errors.push(`${path}: unknown field "${k}"`);
+      else if (typeOf(schema.additionalProperties) === 'object') check(schema.additionalProperties, v, `${path}.${k}`, root, errors);
     }
   }
 }
@@ -60,12 +70,55 @@ function checkExclusions(data, errors) {
     test('fallback', fb.provider, undefined);
     for (const [role, model] of Object.entries(fb.modelOverrides ?? {})) test(`fallback.modelOverrides.${role}`, fb.provider, model);
   }
+  for (const [name, pool] of Object.entries(data.pools ?? {})) {
+    const we = pool?.whenEmpty;
+    if (!we) continue;
+    test(`pools.${name}.whenEmpty`, we.provider, undefined);
+    for (const [role, model] of Object.entries(we.models ?? {})) test(`pools.${name}.whenEmpty.models.${role}`, we.provider, model);
+  }
+}
+
+// The model the top-level fallback would run for a role, or undefined when it has none.
+// Shared with tools/next-account.mjs so the check and the picker agree.
+export function fallbackModel(data, role) {
+  const fb = data.fallback;
+  const r = data.roles?.[role];
+  if (!fb || !r) return undefined;
+  if (fb.modelOverrides?.[role]) return fb.modelOverrides[role];
+  const we = r.pool ? data.pools?.[r.pool]?.whenEmpty : undefined;
+  if (we?.models?.[role] && we.provider === fb.provider) return we.models[role];
+  return r.provider === fb.provider ? r.model : undefined;
+}
+
+// Pools: every role names a pool that exists, its providerInstanceId is in that pool, the pool's
+// whenEmpty has a model for it, and the top-level fallback can run every worker role.
+function checkPools(data, errors) {
+  const pools = typeOf(data.pools) === 'object' ? data.pools : {};
+  for (const [role, r] of Object.entries(data.roles ?? {})) {
+    if (typeOf(r) !== 'object') continue;
+    if (r.pool !== undefined) {
+      const pool = pools[r.pool];
+      if (role === 'lead') errors.push('roles.lead: the lead runs in your own thread and cannot use a pool');
+      else if (typeOf(pool) !== 'object') errors.push(`roles.${role}.pool: no pool named "${r.pool}" in pools`);
+      else {
+        if (r.providerInstanceId && Array.isArray(pool.accounts) && !pool.accounts.includes(r.providerInstanceId)) {
+          errors.push(`roles.${role}.providerInstanceId: "${r.providerInstanceId}" is not in pools.${r.pool}.accounts`);
+        }
+        if (pool.whenEmpty && !pool.whenEmpty.models?.[role]) {
+          errors.push(`pools.${r.pool}.whenEmpty.models: missing a model for role "${role}"`);
+        }
+      }
+    }
+    if (role !== 'lead' && data.fallback && fallbackModel(data, role) === undefined) {
+      errors.push(`fallback: no ${data.fallback.provider} model for role "${role}"; add fallback.modelOverrides.${role}`);
+    }
+  }
 }
 
 export function validateRouting(data, schema = JSON.parse(readFileSync(join(KIT, 'schemas', 'routing.schema.json'), 'utf8'))) {
   const errors = [];
   check(schema, data, '$', schema, errors);
-  if (typeOf(data) === 'object') checkExclusions(data, errors);
+  if (typeOf(data) === 'object') { checkExclusions(data, errors); checkPools(data, errors); }
   return errors;
 }
 

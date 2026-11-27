@@ -74,6 +74,12 @@
           }
         }
       }
+    },
+    "pools": {
+      "description": "Account pools: several accounts on one host driver that a role uses in turn. When an account hits its usage limit, the next one takes over (tools/next-account.mjs walks the chain). Absent when each role has one account.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/poolName" },
+      "additionalProperties": { "$ref": "#/$defs/pool" }
     }
   },
   "$defs": {
@@ -108,7 +114,69 @@
         "model": { "$ref": "#/$defs/modelId" },
         "effort": { "$ref": "#/$defs/effort" },
         "runsOn": { "$ref": "#/$defs/runsOn" },
-        "providerInstanceId": { "$ref": "#/$defs/instanceId" }
+        "providerInstanceId": { "$ref": "#/$defs/instanceId" },
+        "pool": {
+          "description": "Name of an entry in pools. The role tries those accounts in order. When providerInstanceId is also set, it must be one of them (older tools read only providerInstanceId).",
+          "$ref": "#/$defs/poolName"
+        }
+      }
+    },
+    "poolName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$"
+    },
+    "pool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["driverKind", "accounts"],
+      "properties": {
+        "driverKind": {
+          "description": "Host driver every account in the pool uses (T3 Code: driverKind, for example antigravity or claudeAgent).",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$"
+        },
+        "accounts": {
+          "description": "Account ids in the order to try them (T3 Code: providerInstanceId). Labels only.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/instanceId" }
+        },
+        "addNew": {
+          "description": "true: accounts on the same driverKind that the host lists but accounts does not are tried after the listed ones, in name order. Default false.",
+          "type": "boolean"
+        },
+        "cooldownHours": {
+          "description": "How long an account is skipped after it hits its limit, when the error gives no reset time. Default 5.",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 720
+        },
+        "whenEmpty": { "$ref": "#/$defs/poolFallback" }
+      }
+    },
+    "poolFallback": {
+      "description": "Where the pool's roles run when every account in it is at its limit. After this account, the top-level fallback applies.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "models"],
+      "properties": {
+        "provider": { "$ref": "#/$defs/provider" },
+        "providerInstanceId": { "$ref": "#/$defs/instanceId" },
+        "runsOn": { "$ref": "#/$defs/runsOn" },
+        "models": {
+          "description": "Model per role on this account. Every role that uses the pool needs one.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "advisor": { "$ref": "#/$defs/modelId" },
+            "implementation": { "$ref": "#/$defs/modelId" },
+            "bulk": { "$ref": "#/$defs/modelId" },
+            "researcher": { "$ref": "#/$defs/modelId" },
+            "auditor": { "$ref": "#/$defs/modelId" },
+            "verifier": { "$ref": "#/$defs/modelId" }
+          }
+        }
       }
     }
   }

@@ -205,8 +205,9 @@ Orchestration is for big work. On a build a strong lead finishes in under about 
 `setup` writes `local/routing.json` next to `local/MODELS.md`, from the same answers, and rewrites both on every change. Tools such as T3 Code read the JSON instead of parsing the Markdown table, to pick a model per role (lead, implementation, bulk, researcher, auditor or verifier) and to honor rules like "no Gemini".
 
 - **Where tools look.** `$AGENT_KIT_HOME/local/routing.json` if the `AGENT_KIT_HOME` environment variable is set, otherwise `~/Desktop/Agent-kit/local/routing.json`. With no file, a tool uses its own defaults.
-- **Shape.** `version`, `updatedAt`, `roles` (each `{ provider, model, effort?, runsOn?, providerInstanceId? }`), optional `leadEffort`, `excludedModels`, `excludedProviders` and `fallback`. Schema: [`schemas/routing.schema.json`](schemas/routing.schema.json). Example: [`rules/routing.example.json`](rules/routing.example.json).
+- **Shape.** `version`, `updatedAt`, `roles` (each `{ provider, model, effort?, runsOn?, providerInstanceId?, pool? }`), optional `leadEffort`, `excludedModels`, `excludedProviders`, `fallback` and `pools`. Schema: [`schemas/routing.schema.json`](schemas/routing.schema.json). Example: [`rules/routing.example.json`](rules/routing.example.json).
 - **Check it.** `node tools/validate-routing.mjs` validates the example and your `local/routing.json` (Node 18+, no packages). `bash tools/check.sh` runs it too. The file holds labels only, never tokens or keys, and stays git-ignored.
+- **Several accounts on one provider.** List them as a pool (for example five Antigravity accounts running Gemini 4 Hydrogen workers). Before each delegation the lead runs `node tools/next-account.mjs <role>`, which prints the account, model and options to use. When a worker fails on a usage limit, `--spent <id> <role>` marks that account and prints the next one: the rest of the pool, then the pool's `whenEmpty` account, then `fallback`. Spent accounts are kept in `local/account-state.json` until they reset, and new accounts on the same driver join on their own (`addNew`). `--status` lists them all. Details: [`rules/MODELS.example.md`](rules/MODELS.example.md#account-pools-several-accounts-for-one-provider).
 
 <details>
 <summary><b>Where the installer writes</b></summary>
@@ -260,6 +261,7 @@ templates/bots/         SOUL, MEMORY, AGENTS, bot.json + four starter bots
 install/                install.ps1, install.sh and their tests
 tools/check.sh          repo checks (also run by CI)
 tools/validate-routing.mjs   checks routing JSON against the schema (and its test)
+tools/next-account.mjs       picks a worker's account from a pool, skips spent ones (and its test)
 docs/                   this kit's own spec, plan, decisions and lessons
 ```
 </details>

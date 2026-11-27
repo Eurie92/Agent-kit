@@ -31,6 +31,7 @@ These rules apply in every project and every harness. Project rules (`AGENTS.md`
 - Workers run as harness child threads, not headless CLIs. Headless is for scripts and scheduled jobs.
 - Keep delegated jobs fast: split independent topics into parallel jobs (one per topic), cap research at 3 searches per job, and state a time budget in the brief. If a job runs past its budget, read its progress and decide: wait, cut scope, or take over.
 - Never accept a weak result to save usage.
+- Account limits: when a worker fails on a usage limit (quota, rate limit, 429), move to the next account for that role and re-send the same brief, warning that partial edits may exist. With pools in `local/routing.json`, `node tools/next-account.mjs` picks the account and remembers spent ones for every thread (steps in `local/MODELS.md`). One-line notice per switch.
 
 ## 5. Tests
 - Bug: write a failing test that reproduces it, fix, show it passing.
