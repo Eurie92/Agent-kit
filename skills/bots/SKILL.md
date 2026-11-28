@@ -14,15 +14,18 @@ Use this skill for repeat or unattended work: a nightly save, a review of every 
 | | Lite | Full |
 |---|---|---|
 | Runs on | Stock T3 Code, no changes | A private fork of T3 Code with a Bots feature |
-| A bot is | A scheduled task or webhook task whose prompt loads the bot folder | An entry in Settings → Bots |
+| A bot is | A scheduled task or webhook task whose prompt loads the bot folder | An entry in Settings → Bots, made from a gallery template or blank |
+| What it may touch | Whatever the project's permission mode allows | A level (Watch, Report, Work, Ship) and a project list; tools above the level are hidden |
 | Who can ask | Nobody but the owner and the signed webhook sender (no list) | A Who can ask list per platform, owner always allowed |
+| Approvals | In each run's thread | One **Needs you** inbox for every bot, plus the thread |
+| Trail | The thread | The thread, an Activity tab and an audit log the bot cannot read |
 | Memory tidy | The bot does it itself, by its `AGENTS.md` rules | A built-in nightly tidy-up |
-| Kill switch | Pause or delete each task (see below) | One "Stop all bots" switch |
-| Other sources | Schedule and webhook only | Home Chat, and Slack, GitHub, Linear, Gmail and Calendar as the fork adds them |
+| Kill switch | Pause or delete each task (see below) | A run switch per bot and one **Stop all bots** switch |
+| Sources | Schedule and webhook only | Home Chat, Slack and schedules. GitHub is read by polling inside templates. Webhooks, Linear, Gmail and Calendar are parked in the fork |
 
 Start with Lite. Move to Full only if the owner runs the fork. Both use the same four files in the bot folder, so a Lite bot folder can move to Full later.
 
-**Full tier note.** Full needs the owner's private fork (turn on Settings → Labs → Bots, then Settings → Bots → New bot). T3 Code's `TRADEMARK.md` forbids sharing a build that still says "T3 Code". Any build shared with other people must be rebranded and clearly marked unofficial. This kit does not ship the fork. After running the kit installer (when `~/.t3` or `T3CODE_HOME` exists), the four kit starters appear in the gallery under **Agent-kit**.
+**Full tier note.** Full needs the owner's private fork. T3 Code's `TRADEMARK.md` forbids sharing a build that still says "T3 Code". Any build shared with other people must be rebranded and clearly marked unofficial. This kit does not ship the fork. Crews (a team of bots on one job) and the `feature` skill's "run as crew" are not available yet: the fork deferred them.
 
 ## Safe defaults
 
@@ -54,6 +57,36 @@ An unattended run in Ask first mode waits for an approval in its thread. That is
 9. **Record it.** Add the bot, its folder, its tasks and the owner's choices to the project's `docs/DECISIONS.md` if the project has one. Say in one line what was set up and how to stop it.
 
 Do not schedule anything without the owner's "yes" on the exact task: project, schedule, prompt, mode.
+
+## Full tier: set up a bot
+
+1. **Turn it on.** Settings → Labs → **Bots**. A Bots page and a Bots sidebar section appear. The switch is per environment; a bot runs on the environment where it was made.
+2. **Pick a template.** Settings → Bots → **New bot**. The gallery shows the fork's built-ins (Manager, Saver, Reviewer, CI fixer, Bug hunter, Shipper, Janitor, Client update) and, after the kit installer ran, the kit starters under **Agent-kit** (`kit-saver`, `kit-reviewer`, `kit-shipper`, `kit-client-update`). Prefer a template over **Blank bot**. One bot, one job.
+3. **Pick projects.** Tick only the projects the job needs. Leave **All projects on this machine** off unless the job is a machine-wide summary (Manager).
+4. **Create it.** A template bot starts **paused** with every schedule **off**, so nothing runs or spends tokens yet.
+5. **Check the Access tab.** Keep the template's level unless the owner asks for more (see "Pick a level"). Set budgets (runs per day, threads at once). Keep **Push without asking** off.
+6. **Who can ask.** Only for Slack or other sources. Add people by their platform id, never by name. Pick refuse or silence for everyone else.
+7. **First chat.** Turn the run switch on, open **Home Chat** and choose **Start first chat**. The bot introduces itself, asks one question, runs one small check and writes `SOUL.md`. Read what it did.
+8. **Turn on one schedule.** In **Schedules**, turn on the one the job needs. Times are the machine's local time. Watch its first run end to end, approve or deny each card in **Needs you**, and paste what you saw.
+9. **Test the stop.** Turn the bot's run switch off, then try **Stop all bots** once. Paused bots take no work and their schedules do not fire; work already running is not cancelled.
+10. **Record it.** As in Lite step 9.
+
+### Pick a level
+
+Use the lowest level that can do the job.
+
+| Level | Can do | Use for |
+|---|---|---|
+| Watch | Read threads, projects, worktrees, PRs and CI in its projects | Status checks |
+| Report | Watch, plus write in its Home Chat, draft messages and add Needs you cards | Reviewer, Shipper, Client update, Manager, Janitor |
+| Work | Report, plus start workers in their own worktree and edit files only there | Bug hunter; Saver with **Docs-only commits** (up to 5 Markdown files under `docs/`, no workers) |
+| Ship | Work, plus push its own branch and open a PR, each after a "yes" | CI fixer |
+
+Merging to main, deploying, publishing, deleting, force-pushing, touching secrets, paying and sending to someone new always need the owner's "yes" in that moment, at every level. A bot's workers cannot start their own workers.
+
+### Share a bot
+
+**Export** on a bot's page gives a `<slug>.t3bot.json` file (memory only when **Include memory** is ticked). It never holds tokens, Who can ask lists, project ids or folder paths. **Import bot** loads one paused, with schedules off, no projects, and asking before tools and pushes. Review it before turning it on.
 
 ## Memory rules
 
@@ -92,4 +125,5 @@ Each starter folder has a `SOUL.md` and a `TASK.md` with the schedule or trigger
 
 - A one-off job: do it now.
 - Stages, waiting for approval, or code between agent steps: use T3 workflows (`docs/user/workflows.md` in T3 Code).
-- A job that needs other people to ask the bot from Slack or GitHub with a who-can-ask list: that needs the Full tier.
+- A job that needs other people to ask the bot from Slack with a Who can ask list, or a level and project limits enforced by the app: that needs the Full tier.
+- A team of bots on one job (a Crew): not available yet. Run the `feature` skill with normal workers instead.

@@ -13,6 +13,7 @@ All notable changes to this kit. Format: [Keep a Changelog](https://keepachangel
 - README: "Bots" section.
 
 ### Changed
+- `bots` skill v2: a Full tier setup path (gallery templates including the kit starters, paused start, projects, Access tab, Who can ask, first chat, one schedule, stop test), a level picker (Watch, Report, Work, Ship) mapped to the templates, export and import, and a tier table that lists the Full tier's levels, Needs you inbox and audit trail. Crews and "run as crew" are marked as not available yet.
 - GLOBAL §4: a concrete delegation check. Any command or read expected to take more than about 2 minutes (full or package-wide test, typecheck, lint, check or build runs) or to read more than about 5 files goes to the bulk role; the lead runs only quick targeted checks. Running threads must be told about a routing change as a message.
 
 ## [0.6.0] - 2026-11-24
